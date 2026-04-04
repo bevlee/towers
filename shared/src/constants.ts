@@ -1,0 +1,10 @@
+export const STARTING_TOWER = 20
+export const STARTING_WALL = 5
+export const STARTING_RESOURCES = 5
+export const STARTING_LEVELS = 2
+export const WIN_TOWER = 50
+export const WIN_RESOURCES = 150
+export const HAND_SIZE = 6
+export const GAME_TIME = 600 // 10 minutes in seconds
+export const DEFAULT_TURN_TIME = 20
+export const MIN_LEVEL = 1 // source levels can't go below 1
