@@ -1,9 +1,18 @@
-import type { CardDefinition, CardEffect } from '@towers/shared'
+import type { CardDefinition, CardEffect, ConditionCheck } from '@towers/shared'
 
 function targetLabel(target: string): string {
   if (target === 'self') return ''
   if (target === 'enemy') return ' enemy'
   return ' all'
+}
+
+function describeCondition(condition: ConditionCheck): string {
+  if (condition.type === 'wall_zero') {
+    return condition.target === 'enemy' ? 'enemy wall = 0' : 'wall = 0'
+  }
+  const sourceName = condition.source === 'mine' ? 'mine' : condition.source === 'monastery' ? 'monastery' : 'barracks'
+  const op = condition.comparison === 'lt' ? '<' : condition.comparison === 'gt' ? '>' : '='
+  return `${sourceName} ${op} enemy`
 }
 
 function describeEffect(effect: CardEffect): string {
@@ -39,8 +48,13 @@ function describeEffect(effect: CardEffect): string {
       return 'Draw and discard'
     case 'copyLevel':
       return `Copy enemy ${effect.source} level`
-    case 'conditional':
-      return 'Conditional effect'
+    case 'conditional': {
+      const cond = describeCondition(effect.condition)
+      const trueBranch = effect.ifTrue.map(describeEffect).filter(Boolean).join(', ')
+      const falseBranch = effect.ifFalse.map(describeEffect).filter(Boolean).join(', ')
+      if (!falseBranch) return `If ${cond}, ${trueBranch}`
+      return `If ${cond}, ${trueBranch}. Otherwise ${falseBranch}`
+    }
     default:
       return ''
   }
