@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { ClientGameState } from '@towers/shared'
 import { GAME_EVENTS } from '@towers/shared'
-import type { GameStatePayload, GameOverPayload, OpponentDisconnectedPayload } from '@towers/shared'
+import type { GameStartPayload, GameStatePayload, GameOverPayload, OpponentDisconnectedPayload } from '@towers/shared'
 import { socket } from '../socket'
 
 export interface GameOverInfo {
@@ -16,6 +16,12 @@ export function useGameState() {
   const [opponentDisconnected, setOpponentDisconnected] = useState(false)
 
   useEffect(() => {
+    function onGameStart(payload: GameStartPayload) {
+      if (payload.gameState) {
+        setGameState(payload.gameState)
+      }
+    }
+
     function onGameState(payload: GameStatePayload) {
       if (payload.gameState) {
         setGameState(payload.gameState)
@@ -35,11 +41,13 @@ export function useGameState() {
       setOpponentDisconnected(true)
     }
 
+    socket.on(GAME_EVENTS.GAME_START, onGameStart)
     socket.on(GAME_EVENTS.GAME_STATE, onGameState)
     socket.on(GAME_EVENTS.GAME_OVER, onGameOver)
     socket.on(GAME_EVENTS.OPPONENT_DISCONNECTED, onOpponentDisconnected)
 
     return () => {
+      socket.off(GAME_EVENTS.GAME_START, onGameStart)
       socket.off(GAME_EVENTS.GAME_STATE, onGameState)
       socket.off(GAME_EVENTS.GAME_OVER, onGameOver)
       socket.off(GAME_EVENTS.OPPONENT_DISCONNECTED, onOpponentDisconnected)
