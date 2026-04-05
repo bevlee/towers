@@ -63,11 +63,10 @@ export function registerGameHandlers(
     turnManager.clearTurnTimer(roomId)
 
     try {
-      const result = turnManager.handlePlayCard(state, cardInstance.cardName)
-      room.gameState = {
-        ...result.state,
-        gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-      }
+      // Player took an action — reset their consecutive timeout counter
+      const resetState = turnManager.resetTimeouts(state)
+      const result = turnManager.handlePlayCard(resetState, cardInstance.cardName)
+      room.gameState = result.state
 
       // Check for win
       if (result.winResult) {
@@ -98,10 +97,6 @@ export function registerGameHandlers(
 
       // Normal turn end — generate resources for next player, emit state, start timer
       room.gameState = turnManager.generateResources(room.gameState)
-      room.gameState = {
-        ...room.gameState,
-        gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-      }
 
       emitGameStateToBoth(io, room)
 
@@ -152,12 +147,10 @@ export function registerGameHandlers(
     turnManager.clearTurnTimer(roomId)
 
     try {
-      const result = turnManager.handleDiscard(state, cardInstanceId)
+      // Player took an action — reset their consecutive timeout counter
+      const resetState = turnManager.resetTimeouts(state)
+      const result = turnManager.handleDiscard(resetState, cardInstanceId)
       room.gameState = turnManager.generateResources(result.state)
-      room.gameState = {
-        ...room.gameState,
-        gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-      }
 
       emitGameStateToBoth(io, room)
 
@@ -211,10 +204,6 @@ export function registerGameHandlers(
 
     // The card that triggered this had playAgain — continue with play-again turn
     if (room.gameState.playAgainActive) {
-      room.gameState = {
-        ...room.gameState,
-        gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-      }
       emitGameStateToBoth(io, room)
 
       turnManager.startTurn(roomId, room.gameState, () => {
@@ -228,10 +217,6 @@ export function registerGameHandlers(
     room.gameState = turnManager.switchTurn(room.gameState)
     room.gameState = { ...room.gameState, playAgainActive: false }
     room.gameState = turnManager.generateResources(room.gameState)
-    room.gameState = {
-      ...room.gameState,
-      gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-    }
 
     emitGameStateToBoth(io, room)
 

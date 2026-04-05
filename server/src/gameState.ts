@@ -5,7 +5,6 @@ import type {
   PlayerState,
 } from '@towers/shared'
 import {
-  GAME_TIME,
   HAND_SIZE,
   STARTING_LEVELS,
   STARTING_RESOURCES,
@@ -60,8 +59,8 @@ export function createGame(
     currentPlayerIndex: 0,
     deck: remainingDeck,
     turnTimeRemaining: turnTimer,
-    gameTimeRemaining: GAME_TIME,
     turnTimer,
+    consecutiveTimeouts: [0, 0],
     playAgainActive: false,
   }
 }
@@ -93,7 +92,6 @@ export function getClientState(
     isYourTurn: state.currentPlayerIndex === playerIndex,
     deckSize: state.deck.length,
     turnTimeRemaining: state.turnTimeRemaining,
-    gameTimeRemaining: state.gameTimeRemaining,
     winner: state.winner,
     winReason: state.winReason,
   }

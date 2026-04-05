@@ -57,10 +57,11 @@ export interface GameState {
   currentPlayerIndex: 0 | 1
   deck: CardInstance[]
   turnTimeRemaining: number
-  gameTimeRemaining: number
   turnTimer: number
+  /** Consecutive timeouts per player index [p0, p1]. 3 in a row = forfeit. */
+  consecutiveTimeouts: [number, number]
   winner?: string
-  winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout'
+  winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk'
   playAgainActive: boolean
 }
 
@@ -71,7 +72,6 @@ export interface ClientGameState {
   isYourTurn: boolean
   deckSize: number
   turnTimeRemaining: number
-  gameTimeRemaining: number
   winner?: string
   winReason?: string
   lastPlayedCard?: { cardName: string; playedBy: string }

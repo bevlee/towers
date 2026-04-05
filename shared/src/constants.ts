@@ -5,6 +5,6 @@ export const STARTING_LEVELS = 2
 export const WIN_TOWER = 50
 export const WIN_RESOURCES = 150
 export const HAND_SIZE = 6
-export const GAME_TIME = 600 // 10 minutes in seconds
 export const DEFAULT_TURN_TIME = 20
+export const MAX_CONSECUTIVE_TIMEOUTS = 3
 export const MIN_LEVEL = 1 // source levels can't go below 1

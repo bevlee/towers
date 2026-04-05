@@ -24,7 +24,7 @@ export function GamePage({
   onDiscardCard,
   onBackToLobby,
 }: GamePageProps) {
-  const { you, opponent, isYourTurn, deckSize, turnTimeRemaining, gameTimeRemaining } = gameState
+  const { you, opponent, isYourTurn, deckSize, turnTimeRemaining } = gameState
 
   const isWinner = gameOver ? gameOver.winner === you.playerId : false
 
@@ -35,7 +35,6 @@ export function GamePage({
         <TurnIndicator
           isYourTurn={isYourTurn}
           turnTimeRemaining={turnTimeRemaining}
-          gameTimeRemaining={gameTimeRemaining}
         />
       </div>
 

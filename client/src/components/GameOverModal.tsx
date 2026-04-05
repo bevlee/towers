@@ -9,6 +9,8 @@ const reasonLabels: Record<string, string> = {
   tower_built: 'Tower reached maximum height!',
   resources: 'Resource victory!',
   timeout: 'Game timed out!',
+  afk: 'Player went AFK!',
+  forfeit: 'Opponent disconnected!',
 }
 
 export function GameOverModal({ isWinner, winReason, onBackToLobby }: GameOverModalProps) {

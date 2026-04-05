@@ -109,11 +109,6 @@ export function registerLobbyHandlers(
       )
       room.gameState = gameState
 
-      // Start game timer
-      turnManager.startGameTimer(room.id, gameState.gameTimeRemaining, () => {
-        handleGameTimeout(io, room.id, roomManager, turnManager)
-      })
-
       // Generate resources for first player's first turn
       room.gameState = turnManager.generateResources(room.gameState)
 
@@ -236,47 +231,7 @@ function handlePlayerLeave(
   io.emit(LOBBY_EVENTS.ROOM_LIST, { rooms: roomManager.listOpenRooms() })
 }
 
-/** Determine the winner when the game timer expires. */
-function handleGameTimeout(
-  io: Server,
-  roomId: string,
-  roomManager: RoomManager,
-  turnManager: TurnManager,
-): void {
-  const room = roomManager.getRoom(roomId)
-  if (!room?.gameState || room.gameState.phase !== 'playing') return
-
-  const state = room.gameState
-  const [p0, p1] = state.players
-
-  // Higher tower wins; tied tower -> higher wall wins; tied both -> current player loses
-  let winnerId: string
-  if (p0.tower !== p1.tower) {
-    winnerId = p0.tower > p1.tower ? p0.playerId : p1.playerId
-  } else if (p0.wall !== p1.wall) {
-    winnerId = p0.wall > p1.wall ? p0.playerId : p1.playerId
-  } else {
-    // Current player loses on tie
-    const loserIdx = state.currentPlayerIndex
-    winnerId = state.players[loserIdx === 0 ? 1 : 0].playerId
-  }
-
-  room.gameState = {
-    ...state,
-    phase: 'finished',
-    winner: winnerId,
-    winReason: 'timeout',
-    gameTimeRemaining: 0,
-  }
-
-  turnManager.cleanup(roomId)
-
-  emitGameOverToBoth(io, room, winnerId, 'timeout')
-
-  logger.info({ roomId, winnerId }, 'Game ended by timeout')
-}
-
-/** Handle turn timeout — auto-discard a random card. */
+/** Handle turn timeout — auto-discard a random card. Forfeit after 3 consecutive timeouts. */
 export function handleTurnTimeout(
   io: Server,
   roomId: string,
@@ -286,9 +241,28 @@ export function handleTurnTimeout(
   const room = roomManager.getRoom(roomId)
   if (!room?.gameState || room.gameState.phase !== 'playing') return
 
-  const state = room.gameState
-  const currentPlayer = state.players[state.currentPlayerIndex]
+  // Track consecutive timeouts — forfeit if 3 in a row
+  const { state: stateWithTimeout, shouldForfeit } = turnManager.recordTimeout(room.gameState)
+  room.gameState = stateWithTimeout
 
+  if (shouldForfeit) {
+    const loserIdx = room.gameState.currentPlayerIndex
+    const winnerId = room.gameState.players[loserIdx === 0 ? 1 : 0].playerId
+
+    room.gameState = {
+      ...room.gameState,
+      phase: 'finished',
+      winner: winnerId,
+      winReason: 'afk',
+    }
+
+    turnManager.cleanup(roomId)
+    emitGameOverToBoth(io, room, winnerId, 'afk')
+    logger.info({ roomId, winnerId }, 'Game ended by AFK forfeit')
+    return
+  }
+
+  const currentPlayer = room.gameState.players[room.gameState.currentPlayerIndex]
   if (currentPlayer.hand.length === 0) return
 
   // Pick a random discardable card, or any card if none are discardable
@@ -301,12 +275,8 @@ export function handleTurnTimeout(
   const randomCard = pool[Math.floor(Math.random() * pool.length)]
 
   try {
-    const result = turnManager.handleDiscard(state, randomCard.id)
+    const result = turnManager.handleDiscard(room.gameState, randomCard.id)
     room.gameState = turnManager.generateResources(result.state)
-    room.gameState = {
-      ...room.gameState,
-      gameTimeRemaining: turnManager.getGameTimeRemaining(roomId),
-    }
 
     // Emit timeout notification
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {

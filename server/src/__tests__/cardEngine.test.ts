@@ -29,8 +29,8 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     currentPlayerIndex: 0,
     deck: [],
     turnTimeRemaining: 20,
-    gameTimeRemaining: 600,
     turnTimer: 20,
+    consecutiveTimeouts: [0, 0],
     playAgainActive: false,
     ...overrides,
   }

@@ -1,5 +1,5 @@
 import type { GameState } from '@towers/shared'
-import { CARD_MAP } from '@towers/shared'
+import { CARD_MAP, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
 import { playCard } from './cardEngine.js'
 import { drawCard } from './deckManager.js'
 import { checkWin } from './winChecker.js'
@@ -21,12 +21,10 @@ interface DiscardResult {
 }
 
 /**
- * Manages turn flow, timers, and game-level time tracking for active rooms.
+ * Manages turn flow and timers for active rooms.
  */
 export class TurnManager {
   private turnTimers: Map<string, NodeJS.Timeout> = new Map()
-  private gameTimers: Map<string, NodeJS.Timeout> = new Map()
-  private gameTimeRemaining: Map<string, number> = new Map()
 
   /**
    * Start a turn timer for the given room. Calls onTimeout when time expires.
@@ -50,47 +48,34 @@ export class TurnManager {
     }
   }
 
-  /**
-   * Start the 10-minute game timer. Counts down gameTimeRemaining each second.
-   * Calls onTimeout when the game clock reaches zero.
-   */
-  startGameTimer(roomId: string, initialSeconds: number, onTimeout: () => void): void {
-    this.clearGameTimer(roomId)
-    this.gameTimeRemaining.set(roomId, initialSeconds)
-
-    const interval = setInterval(() => {
-      const remaining = (this.gameTimeRemaining.get(roomId) ?? 0) - 1
-      this.gameTimeRemaining.set(roomId, remaining)
-
-      if (remaining <= 0) {
-        clearInterval(interval)
-        this.gameTimers.delete(roomId)
-        onTimeout()
-      }
-    }, 1000)
-
-    this.gameTimers.set(roomId, interval)
-  }
-
-  /** Clear the game timer for a room. */
-  clearGameTimer(roomId: string): void {
-    const timer = this.gameTimers.get(roomId)
-    if (timer) {
-      clearInterval(timer)
-      this.gameTimers.delete(roomId)
-    }
-  }
-
-  /** Get the current game time remaining for a room. */
-  getGameTimeRemaining(roomId: string): number {
-    return this.gameTimeRemaining.get(roomId) ?? 0
-  }
-
   /** Clear all timers for a room. */
   cleanup(roomId: string): void {
     this.clearTurnTimer(roomId)
-    this.clearGameTimer(roomId)
-    this.gameTimeRemaining.delete(roomId)
+  }
+
+  /**
+   * Increment consecutive timeout counter for the current player.
+   * Returns the updated state and whether the player should forfeit.
+   */
+  recordTimeout(state: GameState): { state: GameState; shouldForfeit: boolean } {
+    const idx = state.currentPlayerIndex
+    const consecutiveTimeouts: [number, number] = [...state.consecutiveTimeouts]
+    consecutiveTimeouts[idx] += 1
+
+    const shouldForfeit = consecutiveTimeouts[idx] >= MAX_CONSECUTIVE_TIMEOUTS
+    return {
+      state: { ...state, consecutiveTimeouts },
+      shouldForfeit,
+    }
+  }
+
+  /** Reset consecutive timeout counter for the current player (they took an action). */
+  resetTimeouts(state: GameState): GameState {
+    const idx = state.currentPlayerIndex
+    if (state.consecutiveTimeouts[idx] === 0) return state
+    const consecutiveTimeouts: [number, number] = [...state.consecutiveTimeouts]
+    consecutiveTimeouts[idx] = 0
+    return { ...state, consecutiveTimeouts }
   }
 
   /**
