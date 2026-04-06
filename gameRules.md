@@ -16,7 +16,6 @@ If both players meet a win condition on the same turn (e.g. a card damages both 
 
 ## Time Limits
 
-- **Game timer**: 10 minutes total. When it expires, the player with the taller tower wins. If towers are equal, the taller wall wins. If still tied, the player whose turn it was loses.
 - **Turn timer**: 15, 20, or 30 seconds per turn (set when creating a room). If time runs out, a random card is automatically discarded.
 
 ## Starting Values
@@ -65,13 +64,13 @@ Tower and wall cannot go below 0.
 
 ## Cards
 
-The deck contains 78 cards in three colors. Each card has a resource cost that must be paid from the matching resource to play it.
+The deck has 78 unique card types across three colors (many types have 2 copies, making the physical deck larger). Each card has a resource cost that must be paid from the matching resource to play it.
 
 ### Card Colors
 
-- **Red cards** (30 cards) - Cost ore. Primarily build walls and modify Mine levels.
-- **Blue cards** (24 cards) - Cost mana. Primarily build towers and modify Monastery levels.
-- **Green cards** (24 cards) - Cost troops. Primarily deal damage and modify Barracks levels.
+- **Red cards** (30 types) - Cost ore. Primarily build walls and modify Mine levels.
+- **Blue cards** (24 types) - Cost mana. Primarily build towers and modify Monastery levels.
+- **Green cards** (24 types) - Cost troops. Primarily deal damage and modify Barracks levels.
 
 ### Hand
 

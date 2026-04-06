@@ -98,6 +98,17 @@ export function registerLobbyHandlers(
 
     logger.info({ roomId, playerId }, 'Player joined room')
 
+    // Always notify the joining player so the client tracks currentRoom
+    socket.emit(LOBBY_EVENTS.ROOM_JOINED, {
+      room: {
+        id: room.id,
+        name: room.name,
+        player1: room.player1 ? { playerId: room.player1.playerId, username: room.player1.username } : null,
+        player2: room.player2 ? { playerId: room.player2.playerId, username: room.player2.username } : null,
+        turnTimer: room.turnTimer,
+      },
+    })
+
     // Both players are now in the room — start the game
     if (room.player1 && room.player2) {
       const gameState = createGame(
@@ -209,7 +220,7 @@ function handlePlayerLeave(
         ...room.gameState,
         phase: 'finished',
         winner: opponentId,
-        winReason: 'timeout',
+        winReason: 'forfeit',
       }
 
       io.to(opponentSocketId).emit(GAME_EVENTS.GAME_OVER, {

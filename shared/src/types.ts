@@ -70,7 +70,7 @@ export interface GameState {
   /** Consecutive timeouts per player index [p0, p1]. 3 in a row = forfeit. */
   consecutiveTimeouts: [number, number]
   winner?: string
-  winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk'
+  winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk' | 'forfeit'
   playAgainActive: boolean
   history: GameHistoryEntry[]
   turnNumber: number

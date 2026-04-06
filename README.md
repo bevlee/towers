@@ -1,6 +1,6 @@
 # Two Towers
 
-A real-time multiplayer card game based on Arcomage / Two Towers from Lords of War and Money. Players build towers, fortify walls, gather resources, and attack each other using a shared deck of 78 cards.
+A real-time multiplayer card game based on Arcomage / Two Towers from Lords of War and Money. Players build towers, fortify walls, gather resources, and attack each other using a shared deck of 78 unique card types.
 
 ## Quick Start
 
@@ -62,11 +62,17 @@ towers/
 | `src/pages/HomePage.tsx` | Tavern lobby with room list and create form |
 | `src/pages/GamePage.tsx` | Main game board layout |
 | `src/components/Card.tsx` | Individual card with colored border, effect text, cost |
-| `src/components/Hand.tsx` | Row of 6 cards at screen bottom |
-| `src/components/PlayerStats.tsx` | Resource panel (ore, mana, troops) |
-| `src/components/TowerVisual.tsx` | Tower and wall height bars |
-| `src/components/TurnIndicator.tsx` | Turn state, timers, deck count |
+| `src/components/CardBack.tsx` | Face-down card visual shown in the center of the board |
+| `src/components/CreateGameModal.tsx` | Modal for naming a room and choosing the turn timer |
+| `src/components/GameHistory.tsx` | Scrollable log of all played/discarded cards |
+| `src/components/GameList.tsx` | Table of open rooms with join buttons |
 | `src/components/GameOverModal.tsx` | Win/loss overlay |
+| `src/components/Hand.tsx` | Row of 6 cards at screen bottom |
+| `src/components/LastPlayedCards.tsx` | Card(s) played on the most recent turn, shown center board |
+| `src/components/PlayerStats.tsx` | Resource panel (ore, mana, troops) with animated deltas |
+| `src/components/SettingsModal.tsx` | In-game overlay showing room name, timer, and rule constants |
+| `src/components/TowerVisual.tsx` | Tower and wall height bars with brick animations |
+| `src/components/TurnIndicator.tsx` | Your/Opponent's Turn badge and countdown timer |
 
 ## Configuration
 
