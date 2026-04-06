@@ -62,6 +62,8 @@ export function createGame(
     turnTimer,
     consecutiveTimeouts: [0, 0],
     playAgainActive: false,
+    history: [],
+    turnNumber: 1,
   }
 }
 
@@ -94,5 +96,6 @@ export function getClientState(
     turnTimeRemaining: state.turnTimeRemaining,
     winner: state.winner,
     winReason: state.winReason,
+    history: state.history,
   }
 }

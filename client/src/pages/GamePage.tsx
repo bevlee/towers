@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from 'react'
 import type { ClientGameState } from '@towers/shared'
 import { PlayerStats } from '../components/PlayerStats'
 import { TowerVisual } from '../components/TowerVisual'
@@ -5,6 +6,7 @@ import { DeckInfo } from '../components/DeckInfo'
 import { TurnIndicator } from '../components/TurnIndicator'
 import { Hand } from '../components/Hand'
 import { GameOverModal } from '../components/GameOverModal'
+import { GameHistory } from '../components/GameHistory'
 import type { GameOverInfo } from '../hooks/useGameState'
 
 interface GamePageProps {
@@ -16,6 +18,9 @@ interface GamePageProps {
   onBackToLobby: () => void
 }
 
+const MIN_HISTORY_HEIGHT = 32
+const DEFAULT_HISTORY_HEIGHT = 160
+
 export function GamePage({
   gameState,
   gameOver,
@@ -25,13 +30,39 @@ export function GamePage({
   onBackToLobby,
 }: GamePageProps) {
   const { you, opponent, isYourTurn, deckSize, turnTimeRemaining } = gameState
-
   const isWinner = gameOver ? gameOver.winner === you.playerId : false
+
+  const [historyHeight, setHistoryHeight] = useState(DEFAULT_HISTORY_HEIGHT)
+  const dragging = useRef(false)
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    dragging.current = true
+
+    const startY = e.clientY
+    const startHeight = historyHeight
+
+    function onMouseMove(ev: MouseEvent) {
+      if (!dragging.current) return
+      const delta = startY - ev.clientY
+      const newHeight = Math.max(MIN_HISTORY_HEIGHT, startHeight + delta)
+      setHistoryHeight(newHeight)
+    }
+
+    function onMouseUp() {
+      dragging.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [historyHeight])
 
   return (
     <div className="flex h-screen flex-col bg-stone-900 text-amber-100">
       {/* Top bar with turn indicator */}
-      <div className="flex justify-center border-b border-stone-700 bg-stone-800 py-2">
+      <div className="flex justify-center border-b border-stone-700 bg-stone-800 py-1.5">
         <TurnIndicator
           isYourTurn={isYourTurn}
           turnTimeRemaining={turnTimeRemaining}
@@ -40,34 +71,17 @@ export function GamePage({
 
       {/* Opponent disconnected banner */}
       {opponentDisconnected && (
-        <div className="bg-red-900/50 py-2 text-center text-sm text-red-300">
+        <div className="bg-red-900/50 py-1 text-center text-xs text-red-300">
           Opponent disconnected
         </div>
       )}
 
-      {/* Last played card */}
-      {gameState.lastPlayedCard && (
-        <div className="bg-stone-800/50 py-1 text-center text-xs text-stone-400">
-          {gameState.lastPlayedCard.playedBy === you.playerId ? 'You' : opponent.username} played{' '}
-          <span className="font-bold text-amber-300">{gameState.lastPlayedCard.cardName}</span>
-        </div>
-      )}
-
-      {/* Main game area */}
-      <div className="flex flex-1 items-center justify-center gap-8 px-6">
-        {/* Your stats */}
+      {/* Main game area - fills available space */}
+      <div className="flex flex-1 items-center justify-center gap-6 px-4">
         <PlayerStats player={you} side="left" />
-
-        {/* Your tower */}
         <TowerVisual tower={you.tower} wall={you.wall} side="left" label={you.username} />
-
-        {/* Deck */}
         <DeckInfo deckSize={deckSize} />
-
-        {/* Opponent tower */}
         <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" label={opponent.username} />
-
-        {/* Opponent stats */}
         <PlayerStats player={opponent} side="right" />
       </div>
 
@@ -80,6 +94,28 @@ export function GamePage({
           onPlay={onPlayCard}
           onDiscard={onDiscardCard}
         />
+      </div>
+
+      {/* Drag handle */}
+      <div
+        className="flex h-2 flex-shrink-0 cursor-row-resize items-center justify-center border-t border-stone-700 bg-stone-800 hover:bg-stone-700"
+        onMouseDown={onDragStart}
+      >
+        <div className="h-0.5 w-10 rounded-full bg-stone-500" />
+      </div>
+
+      {/* History panel - resizable */}
+      <div
+        className="flex flex-shrink-0 flex-col overflow-hidden bg-stone-950"
+        style={{ height: historyHeight }}
+      >
+        <div className="flex items-center justify-between border-b border-stone-800 px-3 py-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-stone-500">History</span>
+          <span className="text-xs text-stone-600">{gameState.history.length} moves</span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <GameHistory history={gameState.history} yourPlayerId={you.playerId} />
+        </div>
       </div>
 
       {/* Game over modal */}

@@ -15,9 +15,9 @@ export function TowerVisual({ tower, wall, side, label }: TowerVisualProps) {
   const wallColor = side === 'left' ? 'bg-amber-900' : 'bg-sky-900'
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex min-h-0 flex-1 flex-col items-center gap-1">
       <div className="text-xs text-amber-300">{label}</div>
-      <div className="relative flex h-48 w-20 items-end justify-center gap-1 rounded bg-stone-800/50 p-1">
+      <div className="relative flex min-h-0 flex-1 w-20 items-end justify-center gap-1 rounded bg-stone-800/50 p-1">
         {/* Wall bar */}
         <div className="flex w-6 flex-col justify-end" style={{ height: '100%' }}>
           <div

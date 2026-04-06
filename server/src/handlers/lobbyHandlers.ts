@@ -278,6 +278,21 @@ export function handleTurnTimeout(
     const result = turnManager.handleDiscard(room.gameState, randomCard.id)
     room.gameState = turnManager.generateResources(result.state)
 
+    // Record timeout discard in history
+    room.gameState = {
+      ...room.gameState,
+      history: [
+        ...room.gameState.history,
+        {
+          turn: room.gameState.turnNumber,
+          playerId: currentPlayer.playerId,
+          username: currentPlayer.username,
+          action: 'timeout_discard' as const,
+          cardName: randomCard.cardName,
+        },
+      ],
+    }
+
     // Emit timeout notification
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
       discardedCardInstanceId: randomCard.id,

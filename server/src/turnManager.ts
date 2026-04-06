@@ -207,6 +207,7 @@ export class TurnManager {
     return {
       ...state,
       currentPlayerIndex: state.currentPlayerIndex === 0 ? 1 : 0,
+      turnNumber: state.turnNumber + 1,
     }
   }
 

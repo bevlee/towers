@@ -48,7 +48,7 @@ export function Card({
   return (
     <div
       className={`
-        relative flex h-52 w-32 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
+        relative flex h-40 w-28 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
         bg-stone-800 transition-transform
         ${borderColors[color]}
         ${canPlay ? 'hover:scale-105 hover:-translate-y-2' : 'opacity-60'}
@@ -62,7 +62,7 @@ export function Card({
       </div>
 
       {/* Art placeholder */}
-      <div className={`mx-1 mt-1 h-14 rounded bg-gradient-to-b ${gradientColors[color]}`} />
+      <div className={`mx-1 mt-1 h-8 rounded bg-gradient-to-b ${gradientColors[color]}`} />
 
       {/* Effect text */}
       <div className="flex-1 px-2 py-1 text-center text-[10px] leading-tight text-stone-300">

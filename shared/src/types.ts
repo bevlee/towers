@@ -49,6 +49,14 @@ export interface CardDefinition {
   canDiscard?: boolean
 }
 
+export interface GameHistoryEntry {
+  turn: number
+  playerId: string
+  username: string
+  action: 'play' | 'discard' | 'timeout_discard'
+  cardName: string
+}
+
 export type GamePhase = 'waiting' | 'playing' | 'finished'
 
 export interface GameState {
@@ -63,6 +71,8 @@ export interface GameState {
   winner?: string
   winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk'
   playAgainActive: boolean
+  history: GameHistoryEntry[]
+  turnNumber: number
 }
 
 export interface ClientGameState {
@@ -75,6 +85,7 @@ export interface ClientGameState {
   winner?: string
   winReason?: string
   lastPlayedCard?: { cardName: string; playedBy: string }
+  history: GameHistoryEntry[]
 }
 
 export interface RoomInfo {

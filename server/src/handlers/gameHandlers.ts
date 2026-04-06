@@ -68,6 +68,21 @@ export function registerGameHandlers(
       const result = turnManager.handlePlayCard(resetState, cardInstance.cardName)
       room.gameState = result.state
 
+      // Record history entry
+      room.gameState = {
+        ...room.gameState,
+        history: [
+          ...room.gameState.history,
+          {
+            turn: room.gameState.turnNumber,
+            playerId: currentPlayer.playerId,
+            username: currentPlayer.username,
+            action: 'play',
+            cardName: cardInstance.cardName,
+          },
+        ],
+      }
+
       // Check for win
       if (result.winResult) {
         turnManager.cleanup(roomId)
@@ -151,6 +166,21 @@ export function registerGameHandlers(
       const resetState = turnManager.resetTimeouts(state)
       const result = turnManager.handleDiscard(resetState, cardInstanceId)
       room.gameState = turnManager.generateResources(result.state)
+
+      // Record history entry
+      room.gameState = {
+        ...room.gameState,
+        history: [
+          ...room.gameState.history,
+          {
+            turn: room.gameState.turnNumber,
+            playerId: currentPlayer.playerId,
+            username: currentPlayer.username,
+            action: 'discard',
+            cardName: cardInstance.cardName,
+          },
+        ],
+      }
 
       emitGameStateToBoth(io, room)
 
