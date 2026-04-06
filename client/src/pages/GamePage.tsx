@@ -2,7 +2,8 @@ import { useCallback, useRef, useState } from 'react'
 import type { ClientGameState } from '@towers/shared'
 import { PlayerStats } from '../components/PlayerStats'
 import { TowerVisual } from '../components/TowerVisual'
-import { DeckInfo } from '../components/DeckInfo'
+import { LastPlayedCards } from '../components/LastPlayedCards'
+import { CardBack } from '../components/CardBack'
 import { TurnIndicator } from '../components/TurnIndicator'
 import { Hand } from '../components/Hand'
 import { GameOverModal } from '../components/GameOverModal'
@@ -29,7 +30,7 @@ export function GamePage({
   onDiscardCard,
   onBackToLobby,
 }: GamePageProps) {
-  const { you, opponent, isYourTurn, deckSize, turnTimeRemaining } = gameState
+  const { you, opponent, isYourTurn, turnTimeRemaining } = gameState
   const isWinner = gameOver ? gameOver.winner === you.playerId : false
 
   const [historyHeight, setHistoryHeight] = useState(DEFAULT_HISTORY_HEIGHT)
@@ -80,7 +81,10 @@ export function GamePage({
       <div className="flex flex-1 items-center justify-center gap-6 px-4">
         <PlayerStats player={you} side="left" />
         <TowerVisual tower={you.tower} wall={you.wall} side="left" label={you.username} />
-        <DeckInfo deckSize={deckSize} />
+        <div className="flex flex-col items-center gap-2">
+          <CardBack />
+          <LastPlayedCards history={gameState.history} yourPlayerId={you.playerId} />
+        </div>
         <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" label={opponent.username} />
         <PlayerStats player={opponent} side="right" />
       </div>

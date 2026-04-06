@@ -183,14 +183,15 @@ export class TurnManager {
       throw new Error(`Card cannot be discarded: ${card.cardName}`)
     }
 
-    // Remove from hand
+    // Remove from hand and add to discard pile
+    const discardedCard = player.hand[cardIdx]
     const newHand = [...player.hand]
     newHand.splice(cardIdx, 1)
     player.hand = newHand
 
     const players: [typeof player, typeof player] = [...state.players]
     players[idx] = player
-    let newState: GameState = { ...state, players }
+    let newState: GameState = { ...state, players, discardPile: [...state.discardPile, discardedCard] }
 
     // Draw replacement
     newState = this.drawForPlayer(newState, idx)
@@ -213,9 +214,9 @@ export class TurnManager {
 
   /** Draw the top card from the deck and add it to the given player's hand. */
   drawForPlayer(state: GameState, playerIndex: 0 | 1): GameState {
-    const { card, remainingDeck } = drawCard(state.deck)
+    const { card, remainingDeck, remainingDiscardPile } = drawCard(state.deck, state.discardPile)
     if (!card) {
-      // Deck empty — no draw
+      // Both deck and discard pile empty — no draw
       return state
     }
 
@@ -225,6 +226,6 @@ export class TurnManager {
     const players: [typeof player, typeof player] = [...state.players]
     players[playerIndex] = player
 
-    return { ...state, players, deck: remainingDeck }
+    return { ...state, players, deck: remainingDeck, discardPile: remainingDiscardPile }
   }
 }

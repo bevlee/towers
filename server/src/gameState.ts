@@ -58,6 +58,7 @@ export function createGame(
     players: [player1, player2],
     currentPlayerIndex: 0,
     deck: remainingDeck,
+    discardPile: [],
     turnTimeRemaining: turnTimer,
     turnTimer,
     consecutiveTimeouts: [0, 0],

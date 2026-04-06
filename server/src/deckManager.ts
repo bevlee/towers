@@ -67,16 +67,26 @@ export function dealHands(
 
 /**
  * Draw the top card from the deck.
- * Returns the drawn card (or null if deck is empty) and the remaining deck.
+ * If the deck is empty, shuffles the discard pile into a new deck first.
+ * Returns the drawn card (or null if both are empty), remaining deck, and remaining discard pile.
  */
-export function drawCard(deck: CardInstance[]): {
+export function drawCard(
+  deck: CardInstance[],
+  discardPile: CardInstance[] = [],
+): {
   card: CardInstance | null
   remainingDeck: CardInstance[]
+  remainingDiscardPile: CardInstance[]
 } {
+  // If deck is empty, reshuffle discard pile into deck
   if (deck.length === 0) {
-    return { card: null, remainingDeck: [] }
+    if (discardPile.length === 0) {
+      return { card: null, remainingDeck: [], remainingDiscardPile: [] }
+    }
+    deck = shuffleDeck(discardPile)
+    discardPile = []
   }
 
   const [card, ...remainingDeck] = deck
-  return { card, remainingDeck }
+  return { card, remainingDeck, remainingDiscardPile: discardPile }
 }

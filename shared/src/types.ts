@@ -64,6 +64,7 @@ export interface GameState {
   players: [PlayerState, PlayerState]
   currentPlayerIndex: 0 | 1
   deck: CardInstance[]
+  discardPile: CardInstance[]
   turnTimeRemaining: number
   turnTimer: number
   /** Consecutive timeouts per player index [p0, p1]. 3 in a row = forfeit. */

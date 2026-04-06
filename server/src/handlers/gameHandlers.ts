@@ -217,20 +217,21 @@ export function registerGameHandlers(
       return
     }
 
-    // Remove the chosen card from hand
+    // Remove the chosen card from hand and add to discard pile
     const cardIdx = currentPlayer.hand.findIndex((c) => c.id === discardCardInstanceId)
     if (cardIdx === -1) {
       socket.emit(LOBBY_EVENTS.ERROR, { message: 'Card not in hand' })
       return
     }
 
+    const discardedCard = currentPlayer.hand[cardIdx]
     const updatedPlayer = { ...currentPlayer }
     updatedPlayer.hand = [...currentPlayer.hand]
     updatedPlayer.hand.splice(cardIdx, 1)
 
     const players: [typeof updatedPlayer, typeof updatedPlayer] = [...state.players]
     players[playerIndex] = updatedPlayer
-    room.gameState = { ...state, players }
+    room.gameState = { ...state, players, discardPile: [...state.discardPile, discardedCard] }
 
     // The card that triggered this had playAgain — continue with play-again turn
     if (room.gameState.playAgainActive) {

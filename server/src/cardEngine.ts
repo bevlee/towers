@@ -337,12 +337,14 @@ export function playCard(
   // Deduct cost
   const afterCost = deductCost(player, cardDef)
 
-  // Remove card from hand
+  // Remove card from hand and add to discard pile
+  const playedCard = afterCost.hand[cardIdx]
   const newHand = [...afterCost.hand]
   newHand.splice(cardIdx, 1)
   const updatedPlayer = { ...afterCost, hand: newHand }
 
   let updatedState = updatePlayer(state, playerIndex, updatedPlayer)
+  updatedState = { ...updatedState, discardPile: [...updatedState.discardPile, playedCard] }
 
   // Execute effects
   return executeEffects(updatedState, playerIndex, cardDef.effects)

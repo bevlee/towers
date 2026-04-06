@@ -28,6 +28,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     players: [makePlayer({ playerId: 'p1' }), makePlayer({ playerId: 'p2' })],
     currentPlayerIndex: 0,
     deck: [],
+    discardPile: [],
     turnTimeRemaining: 20,
     turnTimer: 20,
     consecutiveTimeouts: [0, 0],
