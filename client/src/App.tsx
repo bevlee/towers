@@ -103,6 +103,8 @@ export default function App() {
         onPlayCard={playCard}
         onDiscardCard={discardCard}
         onBackToLobby={handleBackToLobby}
+        roomName={currentRoom?.name ?? ''}
+        turnTimer={currentRoom?.turnTimer ?? 0}
       />
     )
   }
@@ -114,6 +116,7 @@ export default function App() {
       onRefresh={listRooms}
       onJoin={handleJoin}
       onCreate={handleCreate}
+      onLeaveRoom={leaveRoom}
       currentRoom={currentRoom}
       error={error}
       username={username}

@@ -8,12 +8,13 @@ interface HomePageProps {
   onRefresh: () => void
   onJoin: (roomId: string) => void
   onCreate: (name: string, turnTimer: number) => void
+  onLeaveRoom: (roomId: string) => void
   currentRoom: RoomInfo | null
   error: string | null
   username: string
 }
 
-export function HomePage({ rooms, onRefresh, onJoin, onCreate, currentRoom, error, username }: HomePageProps) {
+export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, currentRoom, error, username }: HomePageProps) {
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
@@ -42,19 +43,27 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, currentRoom, erro
 
         {/* Waiting for opponent */}
         {currentRoom && (
-          <div className="mb-6 rounded border border-amber-700 bg-amber-900/20 px-4 py-3 text-amber-200">
-            Waiting for opponent in room &ldquo;{currentRoom.name}&rdquo;...
+          <div className="mb-6 flex items-center justify-between rounded border border-amber-700 bg-amber-900/20 px-4 py-3 text-amber-200">
+            <span>Waiting for opponent in room &ldquo;{currentRoom.name}&rdquo;...</span>
+            <button
+              className="rounded bg-red-700 px-3 py-1 text-sm font-bold text-white hover:bg-red-600"
+              onClick={() => onLeaveRoom(currentRoom.id)}
+            >
+              Cancel Challenge
+            </button>
           </div>
         )}
 
         {/* Actions */}
         <div className="mb-6 flex gap-3">
-          <button
-            className="rounded bg-amber-600 px-4 py-2 font-bold text-white hover:bg-amber-500"
-            onClick={() => setShowCreate(true)}
-          >
-            Create a Challenge
-          </button>
+          {!currentRoom && (
+            <button
+              className="rounded bg-amber-600 px-4 py-2 font-bold text-white hover:bg-amber-500"
+              onClick={() => setShowCreate(true)}
+            >
+              Create a Challenge
+            </button>
+          )}
           <button
             className="rounded border border-stone-600 px-4 py-2 text-stone-300 hover:bg-stone-800"
             onClick={onRefresh}
@@ -64,7 +73,7 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, currentRoom, erro
         </div>
 
         {/* Game list */}
-        <GameList rooms={rooms} onJoin={onJoin} />
+        <GameList rooms={rooms} onJoin={onJoin} currentRoom={currentRoom} />
       </main>
 
       {/* Create modal */}

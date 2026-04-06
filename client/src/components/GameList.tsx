@@ -3,9 +3,10 @@ import type { RoomInfo } from '@towers/shared'
 interface GameListProps {
   rooms: RoomInfo[]
   onJoin: (roomId: string) => void
+  currentRoom: RoomInfo | null
 }
 
-export function GameList({ rooms, onJoin }: GameListProps) {
+export function GameList({ rooms, onJoin, currentRoom }: GameListProps) {
   if (rooms.length === 0) {
     return (
       <div className="rounded border border-stone-700 bg-stone-800/50 px-6 py-8 text-center text-stone-500">
@@ -33,12 +34,18 @@ export function GameList({ rooms, onJoin }: GameListProps) {
             </td>
             <td className="px-4 py-3 text-stone-400">{room.turnTimer}s</td>
             <td className="px-4 py-3">
-              <button
-                className="rounded bg-amber-600 px-3 py-1 text-sm font-bold text-white hover:bg-amber-500"
-                onClick={() => onJoin(room.id)}
-              >
-                Join
-              </button>
+              {currentRoom?.id === room.id ? (
+                <span className="text-sm text-stone-500">Your room</span>
+              ) : currentRoom ? (
+                <span className="text-sm text-stone-500">—</span>
+              ) : (
+                <button
+                  className="rounded bg-amber-600 px-3 py-1 text-sm font-bold text-white hover:bg-amber-500"
+                  onClick={() => onJoin(room.id)}
+                >
+                  Join
+                </button>
+              )}
             </td>
           </tr>
         ))}
