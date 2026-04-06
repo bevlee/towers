@@ -78,15 +78,24 @@ export function GamePage({
       )}
 
       {/* Main game area - fills available space */}
-      <div className="flex flex-1 items-center justify-center gap-6 px-4">
-        <PlayerStats player={you} side="left" />
-        <TowerVisual tower={you.tower} wall={you.wall} side="left" label={you.username} />
-        <div className="flex flex-col items-center gap-2">
+      <div className="flex min-h-0 flex-1 px-4 py-2">
+        {/* Left side: your resources + tower */}
+        <div className="flex min-h-0 gap-3">
+          <PlayerStats player={you} side="left" />
+          <TowerVisual tower={you.tower} wall={you.wall} side="left" />
+        </div>
+
+        {/* Center: deck + last played */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-2">
           <CardBack />
           <LastPlayedCards history={gameState.history} yourPlayerId={you.playerId} />
         </div>
-        <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" label={opponent.username} />
-        <PlayerStats player={opponent} side="right" />
+
+        {/* Right side: opponent tower + resources */}
+        <div className="flex min-h-0 gap-3">
+          <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" />
+          <PlayerStats player={opponent} side="right" />
+        </div>
       </div>
 
       {/* Hand area */}
