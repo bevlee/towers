@@ -188,8 +188,8 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
         <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded bg-stone-600" />
       </div>
 
-      {/* Numeric values - anchored below structures */}
-      <div className="mt-2 flex justify-center gap-3 text-sm">
+      {/* Numeric values - anchored below structures, matching visual order */}
+      <div className={`mt-2 flex justify-center gap-3 text-sm ${wallOrder}`}>
         <span className={`${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? 'text-green-400' : towerChange.state === 'decrease' ? 'text-red-400' : ''}`}>
           <span className="text-xs opacity-60">T</span> {tower}
         </span>
