@@ -52,6 +52,12 @@ export function registerGameHandlers(
       return
     }
 
+    // Reject play during draw-discard phase — player must respond with DRAW_DISCARD_CHOICE
+    if (state.awaitingDrawDiscard) {
+      socket.emit(LOBBY_EVENTS.ERROR, { message: 'Must respond to draw-discard request first' })
+      return
+    }
+
     // Find the card in hand by instance ID
     const cardInstance = currentPlayer.hand.find((c) => c.id === cardInstanceId)
     if (!cardInstance) {
@@ -94,10 +100,16 @@ export function registerGameHandlers(
       if (result.needsDrawDiscard) {
         const playerIndex = room.gameState.currentPlayerIndex
         room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
+        room.gameState = { ...room.gameState, awaitingDrawDiscard: true }
 
         // Send the player their updated hand so they can choose which card to discard
         const player = room.gameState.players[playerIndex]
         socket.emit(GAME_EVENTS.DRAW_DISCARD_REQUEST, { hand: player.hand })
+
+        // Start a timer so the player can't stall indefinitely during the discard choice
+        turnManager.startTurn(roomId, room.gameState, () => {
+          handleTurnTimeout(io, roomId, roomManager, turnManager)
+        })
         return
       }
 
@@ -144,6 +156,12 @@ export function registerGameHandlers(
 
     if (currentPlayer.playerId !== playerId) {
       socket.emit(LOBBY_EVENTS.ERROR, { message: 'Not your turn' })
+      return
+    }
+
+    // Reject discard during draw-discard phase — player must respond with DRAW_DISCARD_CHOICE
+    if (state.awaitingDrawDiscard) {
+      socket.emit(LOBBY_EVENTS.ERROR, { message: 'Use draw-discard choice to discard during draw-discard phase' })
       return
     }
 
@@ -217,6 +235,9 @@ export function registerGameHandlers(
       return
     }
 
+    // Cancel the draw-discard phase timer
+    turnManager.clearTurnTimer(roomId)
+
     // Remove the chosen card from hand and add to discard pile
     const cardIdx = currentPlayer.hand.findIndex((c) => c.id === discardCardInstanceId)
     if (cardIdx === -1) {
@@ -231,24 +252,11 @@ export function registerGameHandlers(
 
     const players: [typeof updatedPlayer, typeof updatedPlayer] = [...state.players]
     players[playerIndex] = updatedPlayer
-    room.gameState = { ...state, players, discardPile: [...state.discardPile, discardedCard] }
 
-    // The card that triggered this had playAgain — continue with play-again turn
-    if (room.gameState.playAgainActive) {
-      emitGameStateToBoth(io, room)
+    // Clear the draw-discard flag; the replacement card was already drawn before DRAW_DISCARD_REQUEST
+    room.gameState = { ...state, players, discardPile: [...state.discardPile, discardedCard], awaitingDrawDiscard: false }
 
-      turnManager.startTurn(roomId, room.gameState, () => {
-        handleTurnTimeout(io, roomId, roomManager, turnManager)
-      })
-      return
-    }
-
-    // Otherwise, normal turn end: draw card, switch turns, generate resources
-    room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
-    room.gameState = turnManager.switchTurn(room.gameState)
-    room.gameState = { ...room.gameState, playAgainActive: false }
-    room.gameState = turnManager.generateResources(room.gameState)
-
+    // Always continue the current player's turn — all drawDiscard cards also grant playAgain
     emitGameStateToBoth(io, room)
 
     turnManager.startTurn(roomId, room.gameState, () => {

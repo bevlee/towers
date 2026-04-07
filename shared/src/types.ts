@@ -72,6 +72,8 @@ export interface GameState {
   winner?: string
   winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk' | 'forfeit'
   playAgainActive: boolean
+  /** True while waiting for the current player to send DRAW_DISCARD_CHOICE. */
+  awaitingDrawDiscard: boolean
   history: GameHistoryEntry[]
   turnNumber: number
 }

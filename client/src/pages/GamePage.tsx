@@ -17,6 +17,8 @@ interface GamePageProps {
   opponentDisconnected: boolean
   onPlayCard: (cardInstanceId: string) => void
   onDiscardCard: (cardInstanceId: string) => void
+  onDrawDiscardChoice: (cardInstanceId: string) => void
+  pendingDrawDiscard: boolean
   onBackToLobby: () => void
   roomName: string
   turnTimer: number
@@ -31,6 +33,8 @@ export function GamePage({
   opponentDisconnected,
   onPlayCard,
   onDiscardCard,
+  onDrawDiscardChoice,
+  pendingDrawDiscard,
   onBackToLobby,
   roomName,
   turnTimer,
@@ -154,6 +158,8 @@ export function GamePage({
           isYourTurn={isYourTurn}
           onPlay={onPlayCard}
           onDiscard={onDiscardCard}
+          pendingDrawDiscard={pendingDrawDiscard}
+          onDrawDiscardChoice={onDrawDiscardChoice}
         />
       </div>
 

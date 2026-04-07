@@ -33,6 +33,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     turnTimer: 20,
     consecutiveTimeouts: [0, 0],
     playAgainActive: false,
+    awaitingDrawDiscard: false,
     history: [],
     turnNumber: 1,
     ...overrides,

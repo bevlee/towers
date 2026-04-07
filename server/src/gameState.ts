@@ -63,6 +63,7 @@ export function createGame(
     turnTimer,
     consecutiveTimeouts: [0, 0],
     playAgainActive: false,
+    awaitingDrawDiscard: false,
     history: [],
     turnNumber: 1,
   }

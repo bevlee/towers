@@ -16,7 +16,7 @@ export default function App() {
   const [nameSubmitted, setNameSubmitted] = useState(false)
 
   const { connected } = useSocket()
-  const { gameState, gameOver, opponentDisconnected, playCard, discardCard, resetGame } = useGameState()
+  const { gameState, gameOver, opponentDisconnected, pendingDrawDiscard, playCard, discardCard, sendDrawDiscardChoice, resetGame } = useGameState()
   const { rooms, currentRoom, error, listRooms, createRoom, joinRoom, leaveRoom, clearError } = useLobby()
 
   // Listen for gameStart to switch screens
@@ -102,6 +102,8 @@ export default function App() {
         opponentDisconnected={opponentDisconnected}
         onPlayCard={playCard}
         onDiscardCard={discardCard}
+        onDrawDiscardChoice={sendDrawDiscardChoice}
+        pendingDrawDiscard={pendingDrawDiscard}
         onBackToLobby={handleBackToLobby}
         roomName={currentRoom?.name ?? ''}
         turnTimer={currentRoom?.turnTimer ?? 0}

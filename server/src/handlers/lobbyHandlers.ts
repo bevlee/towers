@@ -273,8 +273,53 @@ export function handleTurnTimeout(
     return
   }
 
-  const currentPlayer = room.gameState.players[room.gameState.currentPlayerIndex]
+  const playerIndex = room.gameState.currentPlayerIndex
+  const currentPlayer = room.gameState.players[playerIndex]
   if (currentPlayer.hand.length === 0) return
+
+  // During draw-discard phase: auto-discard the most recently drawn card (last in hand)
+  // and advance the turn, forfeiting the play-again opportunity.
+  if (room.gameState.awaitingDrawDiscard) {
+    const cardToDiscard = currentPlayer.hand[currentPlayer.hand.length - 1]
+    const updatedPlayer = { ...currentPlayer, hand: currentPlayer.hand.slice(0, -1) }
+    const players = [...room.gameState.players] as typeof room.gameState.players
+    players[playerIndex] = updatedPlayer
+
+    room.gameState = {
+      ...room.gameState,
+      players,
+      discardPile: [...room.gameState.discardPile, cardToDiscard],
+      awaitingDrawDiscard: false,
+      playAgainActive: false,
+    }
+
+    room.gameState = {
+      ...room.gameState,
+      history: [
+        ...room.gameState.history,
+        {
+          turn: room.gameState.turnNumber,
+          playerId: currentPlayer.playerId,
+          username: currentPlayer.username,
+          action: 'timeout_discard' as const,
+          cardName: cardToDiscard.cardName,
+        },
+      ],
+    }
+
+    room.gameState = turnManager.switchTurn(room.gameState)
+    room.gameState = turnManager.generateResources(room.gameState)
+
+    emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
+      discardedCardInstanceId: cardToDiscard.id,
+    })
+    emitGameStateToBoth(io, room)
+
+    turnManager.startTurn(roomId, room.gameState, () => {
+      handleTurnTimeout(io, roomId, roomManager, turnManager)
+    })
+    return
+  }
 
   // Pick a random discardable card, or any card if none are discardable
   const discardableCards = currentPlayer.hand.filter((c) => {
