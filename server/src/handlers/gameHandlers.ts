@@ -273,8 +273,9 @@ export function registerGameHandlers(
     const players: [typeof updatedPlayer, typeof updatedPlayer] = [...resetState.players]
     players[playerIndex] = updatedPlayer
 
-    // Clear the draw-discard flag; the replacement card was already drawn before DRAW_DISCARD_REQUEST
+    // Clear the draw-discard flag and draw a replacement card for the one originally played
     room.gameState = { ...resetState, players, discardPile: [...resetState.discardPile, discardedCard], awaitingDrawDiscard: false }
+    room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
 
     // Record history entry; bump turnNumber so client timer resets for the play-again turn
     room.gameState = {
