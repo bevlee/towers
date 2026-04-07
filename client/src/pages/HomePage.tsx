@@ -7,7 +7,7 @@ interface HomePageProps {
   rooms: RoomInfo[]
   onRefresh: () => void
   onJoin: (roomId: string) => void
-  onCreate: (name: string, turnTimer: number) => void
+  onCreate: (turnTimer: number) => void
   onLeaveRoom: (roomId: string) => void
   currentRoom: RoomInfo | null
   error: string | null
@@ -80,8 +80,8 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
       {showCreate && (
         <CreateGameModal
           onClose={() => setShowCreate(false)}
-          onCreate={(name, timer) => {
-            onCreate(name, timer)
+          onCreate={(timer) => {
+            onCreate(timer)
             setShowCreate(false)
           }}
         />

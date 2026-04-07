@@ -20,7 +20,6 @@ interface GamePageProps {
   onDrawDiscardChoice: (cardInstanceId: string) => void
   pendingDrawDiscard: boolean
   onBackToLobby: () => void
-  roomName: string
   turnTimer: number
 }
 
@@ -36,7 +35,6 @@ export function GamePage({
   onDrawDiscardChoice,
   pendingDrawDiscard,
   onBackToLobby,
-  roomName,
   turnTimer,
 }: GamePageProps) {
   const { you, opponent, isYourTurn, turnTimeRemaining } = gameState
@@ -83,7 +81,7 @@ export function GamePage({
         <div className="flex flex-col">
           <span className="text-sm font-bold text-amber-400">Two Towers</span>
           <span className="text-xs text-stone-500">
-            {roomName}{turnTimer > 0 && ` \u00b7 ${turnTimer}s turns`}
+            {turnTimer > 0 && `${turnTimer}s turns`}
           </span>
         </div>
 
@@ -198,7 +196,6 @@ export function GamePage({
       {/* Settings modal */}
       {showSettings && (
         <SettingsModal
-          roomName={roomName}
           turnTimer={turnTimer}
           onClose={() => setShowSettings(false)}
         />

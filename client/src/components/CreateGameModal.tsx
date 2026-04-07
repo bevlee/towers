@@ -2,17 +2,15 @@ import { useState } from 'react'
 
 interface CreateGameModalProps {
   onClose: () => void
-  onCreate: (name: string, turnTimer: number) => void
+  onCreate: (turnTimer: number) => void
 }
 
 export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
-  const [name, setName] = useState('')
   const [turnTimer, setTurnTimer] = useState(20)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return
-    onCreate(name.trim(), turnTimer)
+    onCreate(turnTimer)
   }
 
   return (
@@ -24,24 +22,12 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
         <h2 className="text-xl font-bold text-amber-200">Create a Challenge</h2>
 
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-stone-400">Room Name</span>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
-            placeholder="Enter room name..."
-            autoFocus
-            maxLength={30}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
           <span className="text-sm text-stone-400">Turn Timer</span>
           <select
             value={turnTimer}
             onChange={(e) => setTurnTimer(Number(e.target.value))}
             className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 outline-none focus:border-amber-500"
+            autoFocus
           >
             <option value={15}>15 seconds</option>
             <option value={20}>20 seconds</option>

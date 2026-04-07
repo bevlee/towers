@@ -8,7 +8,6 @@ import { createGame, getClientState } from '../gameState.js'
 import { logger } from '../logger.js'
 
 const CreateRoomSchema = z.object({
-  name: z.string().min(1).max(50),
   turnTimer: z.number().int().min(15).max(30),
   username: z.string().min(1).max(30),
 })
@@ -42,10 +41,10 @@ export function registerLobbyHandlers(
       return
     }
 
-    const { name, turnTimer, username } = parsed.data
+    const { turnTimer, username } = parsed.data
     const playerId = socket.data.playerId as string
 
-    const room = roomManager.createRoom(name, turnTimer, {
+    const room = roomManager.createRoom(`${username}'s game`, turnTimer, {
       playerId,
       username,
       socketId: socket.id,

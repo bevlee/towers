@@ -1,12 +1,11 @@
 import { WIN_TOWER, WIN_RESOURCES, HAND_SIZE, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
 
 interface SettingsModalProps {
-  roomName: string
   turnTimer: number
   onClose: () => void
 }
 
-export function SettingsModal({ roomName, turnTimer, onClose }: SettingsModalProps) {
+export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
       <div
@@ -16,10 +15,6 @@ export function SettingsModal({ roomName, turnTimer, onClose }: SettingsModalPro
         <h2 className="text-center text-xl font-bold text-amber-400">Game Settings</h2>
 
         <div className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-stone-400">Room</span>
-            <span className="text-amber-100">{roomName || 'Unknown'}</span>
-          </div>
           <div className="flex justify-between">
             <span className="text-stone-400">Turn Timer</span>
             <span className="text-amber-100">{turnTimer}s</span>

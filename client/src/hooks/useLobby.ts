@@ -43,9 +43,9 @@ export function useLobby() {
     socket.emit(LOBBY_EVENTS.LIST_ROOMS)
   }, [])
 
-  const createRoom = useCallback((name: string, turnTimer: number, username: string) => {
+  const createRoom = useCallback((turnTimer: number, username: string) => {
     setError(null)
-    socket.emit(LOBBY_EVENTS.CREATE_ROOM, { name, turnTimer, username })
+    socket.emit(LOBBY_EVENTS.CREATE_ROOM, { turnTimer, username })
   }, [])
 
   const joinRoom = useCallback((roomId: string, username: string) => {

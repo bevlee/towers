@@ -39,8 +39,8 @@ export default function App() {
     setScreen('home')
   }, [currentRoom, leaveRoom, resetGame])
 
-  const handleCreate = useCallback((name: string, turnTimer: number) => {
-    createRoom(name, turnTimer, username)
+  const handleCreate = useCallback((turnTimer: number) => {
+    createRoom(turnTimer, username)
   }, [createRoom, username])
 
   const handleJoin = useCallback((roomId: string) => {
@@ -105,7 +105,6 @@ export default function App() {
         onDrawDiscardChoice={sendDrawDiscardChoice}
         pendingDrawDiscard={pendingDrawDiscard}
         onBackToLobby={handleBackToLobby}
-        roomName={currentRoom?.name ?? ''}
         turnTimer={currentRoom?.turnTimer ?? 0}
       />
     )

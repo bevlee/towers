@@ -19,8 +19,7 @@ export function GameList({ rooms, onJoin, currentRoom }: GameListProps) {
     <table className="w-full border-collapse">
       <thead>
         <tr className="border-b border-stone-700 text-left text-sm text-stone-400">
-          <th className="px-4 py-2">Room Name</th>
-          <th className="px-4 py-2">Player</th>
+          <th className="px-4 py-2">Host</th>
           <th className="px-4 py-2">Timer</th>
           <th className="px-4 py-2">Action</th>
         </tr>
@@ -28,8 +27,7 @@ export function GameList({ rooms, onJoin, currentRoom }: GameListProps) {
       <tbody>
         {rooms.map((room) => (
           <tr key={room.id} className="border-b border-stone-700/50 hover:bg-stone-800/50">
-            <td className="px-4 py-3 text-amber-100">{room.name}</td>
-            <td className="px-4 py-3 text-stone-300">
+            <td className="px-4 py-3 text-amber-100">
               {room.player1?.username ?? 'Empty'}
             </td>
             <td className="px-4 py-3 text-stone-400">{room.turnTimer}s</td>
