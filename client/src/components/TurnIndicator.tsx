@@ -3,10 +3,11 @@ import { useCountdown } from '../hooks/useCountdown'
 interface TurnIndicatorProps {
   isYourTurn: boolean
   turnTimeRemaining: number
+  turnNumber: number
 }
 
-export function TurnIndicator({ isYourTurn, turnTimeRemaining }: TurnIndicatorProps) {
-  const turnTime = useCountdown(turnTimeRemaining, isYourTurn)
+export function TurnIndicator({ isYourTurn, turnTimeRemaining, turnNumber }: TurnIndicatorProps) {
+  const turnTime = useCountdown(turnTimeRemaining, turnNumber)
 
   const urgent = turnTime <= 5
 

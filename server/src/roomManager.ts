@@ -43,6 +43,9 @@ export class RoomManager {
     if (!room) {
       throw new Error(`Room not found: ${roomId}`)
     }
+    if (room.player1?.playerId === player.playerId) {
+      throw new Error(`Cannot join your own room: ${roomId}`)
+    }
     if (room.player2) {
       throw new Error(`Room is full: ${roomId}`)
     }

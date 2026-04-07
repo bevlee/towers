@@ -74,9 +74,10 @@ export function registerGameHandlers(
       const result = turnManager.handlePlayCard(resetState, cardInstance.cardName)
       room.gameState = result.state
 
-      // Record history entry
+      // Record history entry and last played card
       room.gameState = {
         ...room.gameState,
+        lastPlayedCard: { cardName: cardInstance.cardName, playedBy: currentPlayer.playerId },
         history: [
           ...room.gameState.history,
           {
@@ -100,7 +101,7 @@ export function registerGameHandlers(
       if (result.needsDrawDiscard) {
         const playerIndex = room.gameState.currentPlayerIndex
         room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
-        room.gameState = { ...room.gameState, awaitingDrawDiscard: true }
+        room.gameState = { ...room.gameState, awaitingDrawDiscard: true, turnTimeRemaining: room.gameState.turnTimer }
 
         // Send the player their updated hand so they can choose which card to discard
         const player = room.gameState.players[playerIndex]
@@ -113,8 +114,13 @@ export function registerGameHandlers(
         return
       }
 
-      // If playAgain, emit state and restart turn timer (same player)
+      // If playAgain, bump turnNumber so client timer resets, emit state
       if (result.playAgain) {
+        room.gameState = {
+          ...room.gameState,
+          turnNumber: room.gameState.turnNumber + 1,
+          turnTimeRemaining: room.gameState.turnTimer,
+        }
         emitGameStateToBoth(io, room)
         turnManager.startTurn(roomId, room.gameState, () => {
           handleTurnTimeout(io, roomId, roomManager, turnManager)
@@ -124,6 +130,7 @@ export function registerGameHandlers(
 
       // Normal turn end — generate resources for next player, emit state, start timer
       room.gameState = turnManager.generateResources(room.gameState)
+      room.gameState = { ...room.gameState, turnTimeRemaining: room.gameState.turnTimer }
 
       emitGameStateToBoth(io, room)
 
@@ -188,6 +195,8 @@ export function registerGameHandlers(
       // Record history entry
       room.gameState = {
         ...room.gameState,
+        lastPlayedCard: undefined,
+        turnTimeRemaining: room.gameState.turnTimer,
         history: [
           ...room.gameState.history,
           {
@@ -246,15 +255,43 @@ export function registerGameHandlers(
     }
 
     const discardedCard = currentPlayer.hand[cardIdx]
+
+    // Validate canDiscard (Lodestone check)
+    const def = CARD_MAP[discardedCard.cardName]
+    if (def?.canDiscard === false) {
+      socket.emit(LOBBY_EVENTS.ERROR, { message: 'This card cannot be discarded' })
+      return
+    }
+
+    // Player took an action — reset their consecutive timeout counter
+    const resetState = turnManager.resetTimeouts(state)
+
     const updatedPlayer = { ...currentPlayer }
     updatedPlayer.hand = [...currentPlayer.hand]
     updatedPlayer.hand.splice(cardIdx, 1)
 
-    const players: [typeof updatedPlayer, typeof updatedPlayer] = [...state.players]
+    const players: [typeof updatedPlayer, typeof updatedPlayer] = [...resetState.players]
     players[playerIndex] = updatedPlayer
 
     // Clear the draw-discard flag; the replacement card was already drawn before DRAW_DISCARD_REQUEST
-    room.gameState = { ...state, players, discardPile: [...state.discardPile, discardedCard], awaitingDrawDiscard: false }
+    room.gameState = { ...resetState, players, discardPile: [...resetState.discardPile, discardedCard], awaitingDrawDiscard: false }
+
+    // Record history entry; bump turnNumber so client timer resets for the play-again turn
+    room.gameState = {
+      ...room.gameState,
+      turnNumber: room.gameState.turnNumber + 1,
+      turnTimeRemaining: room.gameState.turnTimer,
+      history: [
+        ...room.gameState.history,
+        {
+          turn: room.gameState.turnNumber,
+          playerId: currentPlayer.playerId,
+          username: currentPlayer.username,
+          action: 'discard',
+          cardName: discardedCard.cardName,
+        },
+      ],
+    }
 
     // Always continue the current player's turn — all drawDiscard cards also grant playAgain
     emitGameStateToBoth(io, room)

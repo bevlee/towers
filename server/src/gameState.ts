@@ -96,8 +96,10 @@ export function getClientState(
     isYourTurn: state.currentPlayerIndex === playerIndex,
     deckSize: state.deck.length,
     turnTimeRemaining: state.turnTimeRemaining,
+    turnNumber: state.turnNumber,
     winner: state.winner,
     winReason: state.winReason,
+    lastPlayedCard: state.lastPlayedCard,
     history: state.history,
   }
 }

@@ -76,6 +76,7 @@ export interface GameState {
   awaitingDrawDiscard: boolean
   history: GameHistoryEntry[]
   turnNumber: number
+  lastPlayedCard?: { cardName: string; playedBy: string }
 }
 
 export interface ClientGameState {
@@ -85,6 +86,7 @@ export interface ClientGameState {
   isYourTurn: boolean
   deckSize: number
   turnTimeRemaining: number
+  turnNumber: number
   winner?: string
   winReason?: string
   lastPlayedCard?: { cardName: string; playedBy: string }
