@@ -76,6 +76,8 @@ export interface GameState {
   awaitingDrawDiscard: boolean
   history: GameHistoryEntry[]
   turnNumber: number
+  /** Increments every time a new timer is started — used by client to reset countdown. */
+  timerKey: number
   lastPlayedCard?: { cardName: string; playedBy: string }
 }
 
@@ -87,6 +89,7 @@ export interface ClientGameState {
   deckSize: number
   turnTimeRemaining: number
   turnNumber: number
+  timerKey: number
   winner?: string
   winReason?: string
   lastPlayedCard?: { cardName: string; playedBy: string }

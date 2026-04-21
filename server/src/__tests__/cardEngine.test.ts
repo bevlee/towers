@@ -36,6 +36,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     awaitingDrawDiscard: false,
     history: [],
     turnNumber: 1,
+    timerKey: 0,
     ...overrides,
   }
 }

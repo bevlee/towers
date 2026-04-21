@@ -308,7 +308,7 @@ export function handleTurnTimeout(
 
     room.gameState = turnManager.switchTurn(room.gameState)
     room.gameState = turnManager.generateResources(room.gameState)
-    room.gameState = { ...room.gameState, turnTimeRemaining: room.gameState.turnTimer }
+    room.gameState = { ...room.gameState, timerKey: room.gameState.timerKey + 1, turnTimeRemaining: room.gameState.turnTimer }
 
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
       discardedCardInstanceId: cardToDiscard.id,
@@ -337,6 +337,7 @@ export function handleTurnTimeout(
     // Record timeout discard in history
     room.gameState = {
       ...room.gameState,
+      timerKey: room.gameState.timerKey + 1,
       turnTimeRemaining: room.gameState.turnTimer,
       history: [
         ...room.gameState.history,

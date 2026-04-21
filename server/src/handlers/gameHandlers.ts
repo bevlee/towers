@@ -101,7 +101,7 @@ export function registerGameHandlers(
       if (result.needsDrawDiscard) {
         const playerIndex = room.gameState.currentPlayerIndex
         room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
-        room.gameState = { ...room.gameState, awaitingDrawDiscard: true, turnTimeRemaining: room.gameState.turnTimer }
+        room.gameState = { ...room.gameState, awaitingDrawDiscard: true, timerKey: room.gameState.timerKey + 1, turnTimeRemaining: room.gameState.turnTimer }
 
         // Send the player their updated hand so they can choose which card to discard
         const player = room.gameState.players[playerIndex]
@@ -114,11 +114,11 @@ export function registerGameHandlers(
         return
       }
 
-      // If playAgain, bump turnNumber so client timer resets, emit state
+      // If playAgain, bump timerKey so client timer resets, emit state
       if (result.playAgain) {
         room.gameState = {
           ...room.gameState,
-          turnNumber: room.gameState.turnNumber + 1,
+          timerKey: room.gameState.timerKey + 1,
           turnTimeRemaining: room.gameState.turnTimer,
         }
         emitGameStateToBoth(io, room)
@@ -130,7 +130,7 @@ export function registerGameHandlers(
 
       // Normal turn end — generate resources for next player, emit state, start timer
       room.gameState = turnManager.generateResources(room.gameState)
-      room.gameState = { ...room.gameState, turnTimeRemaining: room.gameState.turnTimer }
+      room.gameState = { ...room.gameState, timerKey: room.gameState.timerKey + 1, turnTimeRemaining: room.gameState.turnTimer }
 
       emitGameStateToBoth(io, room)
 
@@ -196,6 +196,7 @@ export function registerGameHandlers(
       room.gameState = {
         ...room.gameState,
         lastPlayedCard: undefined,
+        timerKey: room.gameState.timerKey + 1,
         turnTimeRemaining: room.gameState.turnTimer,
         history: [
           ...room.gameState.history,
@@ -277,10 +278,10 @@ export function registerGameHandlers(
     room.gameState = { ...resetState, players, discardPile: [...resetState.discardPile, discardedCard], awaitingDrawDiscard: false }
     room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
 
-    // Record history entry; bump turnNumber so client timer resets for the play-again turn
+    // Record history entry; bump timerKey so client timer resets for the play-again turn
     room.gameState = {
       ...room.gameState,
-      turnNumber: room.gameState.turnNumber + 1,
+      timerKey: room.gameState.timerKey + 1,
       turnTimeRemaining: room.gameState.turnTimer,
       history: [
         ...room.gameState.history,

@@ -66,6 +66,7 @@ export function createGame(
     awaitingDrawDiscard: false,
     history: [],
     turnNumber: 1,
+    timerKey: 0,
   }
 }
 
@@ -97,6 +98,7 @@ export function getClientState(
     deckSize: state.deck.length,
     turnTimeRemaining: state.turnTimeRemaining,
     turnNumber: state.turnNumber,
+    timerKey: state.timerKey,
     winner: state.winner,
     winReason: state.winReason,
     lastPlayedCard: state.lastPlayedCard,

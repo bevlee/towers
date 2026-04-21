@@ -137,7 +137,7 @@ export function GamePage({
             <TurnIndicator
               isYourTurn={isYourTurn}
               turnTimeRemaining={turnTimeRemaining}
-              turnNumber={gameState.turnNumber}
+              timerKey={gameState.timerKey}
             />
           </div>
         </div>
