@@ -74,6 +74,34 @@ towers/
 | `src/components/TowerVisual.tsx` | Tower and wall height bars with brick animations |
 | `src/components/TurnIndicator.tsx` | Your/Opponent's Turn badge and countdown timer |
 
+## Docker
+
+Build and push both images from the monorepo root:
+
+```bash
+# client
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t bevdev1/towers-client:v1.0 \
+  -f client/Dockerfile \
+  . \
+  --push
+
+# server
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t bevdev1/towers-server:v1.0 \
+  -f server/Dockerfile \
+  . \
+  --push
+```
+
+The client image accepts a `SERVER_URL` environment variable at runtime:
+
+```bash
+docker run -e SERVER_URL=https://game.example.com -p 80:80 bevdev1/towers-client:v1.0
+```
+
 ## Configuration
 
 Environment variables (all optional, with defaults):
