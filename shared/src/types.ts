@@ -65,13 +65,11 @@ export interface GameState {
   currentPlayerIndex: 0 | 1
   deck: CardInstance[]
   discardPile: CardInstance[]
-  turnTimeRemaining: number
   turnTimer: number
   /** Consecutive timeouts per player index [p0, p1]. 3 in a row = forfeit. */
   consecutiveTimeouts: [number, number]
   winner?: string
   winReason?: 'tower_destroyed' | 'tower_built' | 'resources' | 'timeout' | 'afk' | 'forfeit'
-  playAgainActive: boolean
   /** True while waiting for the current player to send DRAW_DISCARD_CHOICE. */
   awaitingDrawDiscard: boolean
   history: GameHistoryEntry[]
@@ -87,7 +85,7 @@ export interface ClientGameState {
   opponent: Omit<PlayerState, 'hand'> & { handSize: number }
   isYourTurn: boolean
   deckSize: number
-  turnTimeRemaining: number
+  turnTimer: number
   turnNumber: number
   timerKey: number
   winner?: string

@@ -1,4 +1,4 @@
-import type { GameState } from '@towers/shared'
+import type { GameHistoryEntry, GameState, PlayerState } from '@towers/shared'
 import { CARD_MAP, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
 import { playCard } from './cardEngine.js'
 import { drawCard } from './deckManager.js'
@@ -131,7 +131,7 @@ export class TurnManager {
     // and ask the player which card to discard before continuing
     if (result.needsDrawDiscard) {
       return {
-        state: { ...newState, playAgainActive: result.playAgain },
+        state: newState,
         playAgain: result.playAgain,
         needsDrawDiscard: true,
         winResult: null,
@@ -142,7 +142,7 @@ export class TurnManager {
       // Play again: draw a replacement card, but don't switch turns or generate resources
       newState = this.drawForPlayer(newState, playerIndex)
       return {
-        state: { ...newState, playAgainActive: true },
+        state: newState,
         playAgain: true,
         needsDrawDiscard: false,
         winResult: null,
@@ -152,7 +152,6 @@ export class TurnManager {
     // Normal turn end: draw a card and switch turns
     newState = this.drawForPlayer(newState, playerIndex)
     newState = this.switchTurn(newState)
-    newState = { ...newState, playAgainActive: false }
 
     return {
       state: newState,
@@ -198,7 +197,6 @@ export class TurnManager {
 
     // Switch turns
     newState = this.switchTurn(newState)
-    newState = { ...newState, playAgainActive: false }
 
     return { state: newState }
   }
@@ -209,6 +207,33 @@ export class TurnManager {
       ...state,
       currentPlayerIndex: state.currentPlayerIndex === 0 ? 1 : 0,
       turnNumber: state.turnNumber + 1,
+    }
+  }
+
+  /** Bump timerKey so the client restarts its countdown from turnTimer. */
+  resetTurnTimer(state: GameState): GameState {
+    return { ...state, timerKey: state.timerKey + 1 }
+  }
+
+  /** Append a history entry for the current player's action. */
+  addHistoryEntry(
+    state: GameState,
+    player: PlayerState,
+    action: GameHistoryEntry['action'],
+    cardName: string,
+  ): GameState {
+    return {
+      ...state,
+      history: [
+        ...state.history,
+        {
+          turn: state.turnNumber,
+          playerId: player.playerId,
+          username: player.username,
+          action,
+          cardName,
+        },
+      ],
     }
   }
 

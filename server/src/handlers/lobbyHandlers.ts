@@ -1,20 +1,20 @@
 import type { Server, Socket } from 'socket.io'
 import { z } from 'zod'
 import { LOBBY_EVENTS, GAME_EVENTS, CARD_MAP } from '@towers/shared'
-import type { GameState } from '@towers/shared'
-import type { RoomManager } from '../roomManager.js'
+import type { Room, RoomManager } from '../roomManager.js'
 import type { TurnManager } from '../turnManager.js'
 import { createGame, getClientState } from '../gameState.js'
 import { logger } from '../logger.js'
+import { emitGameOverToBoth, emitGameStateToBoth, emitToBothPlayers } from './emit.js'
 
 const CreateRoomSchema = z.object({
   turnTimer: z.number().int().min(15).max(30),
-  username: z.string().min(1).max(30),
+  username: z.string().min(1).max(20),
 })
 
 const JoinRoomSchema = z.object({
   roomId: z.string().uuid(),
-  username: z.string().min(1).max(30),
+  username: z.string().min(1).max(20),
 })
 
 const LeaveRoomSchema = z.object({
@@ -170,9 +170,9 @@ export function registerLobbyHandlers(
     if (room.gameState && room.gameState.phase === 'playing') {
       logger.info({ roomId, playerId }, 'Player disconnected during game, starting grace period')
 
-      const opponentSocketId = getOpponentSocketId(room, playerId)
-      if (opponentSocketId) {
-        io.to(opponentSocketId).emit(GAME_EVENTS.OPPONENT_DISCONNECTED, {
+      const opponent = getOpponent(room, playerId)
+      if (opponent) {
+        io.to(opponent.socketId).emit(GAME_EVENTS.OPPONENT_DISCONNECTED, {
           message: 'Opponent disconnected. Waiting 5 seconds for reconnection...',
         })
       }
@@ -211,21 +211,20 @@ function handlePlayerLeave(
 
   // If game in progress, the other player wins by forfeit
   if (room.gameState && room.gameState.phase === 'playing') {
-    const opponentSocketId = getOpponentSocketId(room, playerId)
-    const opponentId = getOpponentPlayerId(room, playerId)
+    const opponent = getOpponent(room, playerId)
 
-    if (opponentSocketId && opponentId && room.gameState) {
+    if (opponent && room.gameState) {
       room.gameState = {
         ...room.gameState,
         phase: 'finished',
-        winner: opponentId,
+        winner: opponent.playerId,
         winReason: 'forfeit',
       }
 
-      io.to(opponentSocketId).emit(GAME_EVENTS.GAME_OVER, {
-        winner: opponentId,
+      io.to(opponent.socketId).emit(GAME_EVENTS.GAME_OVER, {
+        winner: opponent.playerId,
         winReason: 'forfeit',
-        finalState: getClientState(room.gameState, opponentId),
+        finalState: getClientState(room.gameState, opponent.playerId),
       })
     }
 
@@ -289,26 +288,12 @@ export function handleTurnTimeout(
       players,
       discardPile: [...room.gameState.discardPile, cardToDiscard],
       awaitingDrawDiscard: false,
-      playAgainActive: false,
     }
 
-    room.gameState = {
-      ...room.gameState,
-      history: [
-        ...room.gameState.history,
-        {
-          turn: room.gameState.turnNumber,
-          playerId: currentPlayer.playerId,
-          username: currentPlayer.username,
-          action: 'timeout_discard' as const,
-          cardName: cardToDiscard.cardName,
-        },
-      ],
-    }
-
+    room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', cardToDiscard.cardName)
     room.gameState = turnManager.switchTurn(room.gameState)
     room.gameState = turnManager.generateResources(room.gameState)
-    room.gameState = { ...room.gameState, timerKey: room.gameState.timerKey + 1, turnTimeRemaining: room.gameState.turnTimer }
+    room.gameState = turnManager.resetTurnTimer(room.gameState)
 
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
       discardedCardInstanceId: cardToDiscard.id,
@@ -333,33 +318,14 @@ export function handleTurnTimeout(
   try {
     const result = turnManager.handleDiscard(room.gameState, randomCard.id)
     room.gameState = turnManager.generateResources(result.state)
+    room.gameState = turnManager.resetTurnTimer(room.gameState)
+    room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', randomCard.cardName)
 
-    // Record timeout discard in history
-    room.gameState = {
-      ...room.gameState,
-      timerKey: room.gameState.timerKey + 1,
-      turnTimeRemaining: room.gameState.turnTimer,
-      history: [
-        ...room.gameState.history,
-        {
-          turn: room.gameState.turnNumber,
-          playerId: currentPlayer.playerId,
-          username: currentPlayer.username,
-          action: 'timeout_discard' as const,
-          cardName: randomCard.cardName,
-        },
-      ],
-    }
-
-    // Emit timeout notification
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
       discardedCardInstanceId: randomCard.id,
     })
-
-    // Emit updated state
     emitGameStateToBoth(io, room)
 
-    // Start next turn timer
     turnManager.startTurn(roomId, room.gameState, () => {
       handleTurnTimeout(io, roomId, roomManager, turnManager)
     })
@@ -368,56 +334,9 @@ export function handleTurnTimeout(
   }
 }
 
-/** Get the opponent's socket ID. */
-function getOpponentSocketId(room: { player1: { playerId: string; socketId: string } | null; player2: { playerId: string; socketId: string } | null }, playerId: string): string | undefined {
-  if (room.player1?.playerId === playerId) return room.player2?.socketId
-  if (room.player2?.playerId === playerId) return room.player1?.socketId
-  return undefined
+function getOpponent(room: Room, playerId: string) {
+  if (room.player1?.playerId === playerId) return room.player2
+  if (room.player2?.playerId === playerId) return room.player1
+  return null
 }
 
-/** Get the opponent's player ID. */
-function getOpponentPlayerId(room: { player1: { playerId: string } | null; player2: { playerId: string } | null }, playerId: string): string | undefined {
-  if (room.player1?.playerId === playerId) return room.player2?.playerId
-  if (room.player2?.playerId === playerId) return room.player1?.playerId
-  return undefined
-}
-
-/** Emit an event to both players in a room. */
-function emitToBothPlayers(io: Server, room: { player1: { socketId: string } | null; player2: { socketId: string } | null }, event: string, payload: unknown): void {
-  if (room.player1) io.to(room.player1.socketId).emit(event, payload)
-  if (room.player2) io.to(room.player2.socketId).emit(event, payload)
-}
-
-/** Emit personalised game state to both players. */
-function emitGameStateToBoth(io: Server, room: { player1: { playerId: string; socketId: string } | null; player2: { playerId: string; socketId: string } | null; gameState: GameState | null }): void {
-  if (!room.gameState) return
-  if (room.player1) {
-    io.to(room.player1.socketId).emit(GAME_EVENTS.GAME_STATE, {
-      gameState: getClientState(room.gameState, room.player1.playerId),
-    })
-  }
-  if (room.player2) {
-    io.to(room.player2.socketId).emit(GAME_EVENTS.GAME_STATE, {
-      gameState: getClientState(room.gameState, room.player2.playerId),
-    })
-  }
-}
-
-/** Emit game over to both players. */
-function emitGameOverToBoth(io: Server, room: { player1: { playerId: string; socketId: string } | null; player2: { playerId: string; socketId: string } | null; gameState: GameState | null }, winnerId: string, winReason: string): void {
-  if (!room.gameState) return
-  if (room.player1) {
-    io.to(room.player1.socketId).emit(GAME_EVENTS.GAME_OVER, {
-      winner: winnerId,
-      winReason,
-      finalState: getClientState(room.gameState, room.player1.playerId),
-    })
-  }
-  if (room.player2) {
-    io.to(room.player2.socketId).emit(GAME_EVENTS.GAME_OVER, {
-      winner: winnerId,
-      winReason,
-      finalState: getClientState(room.gameState, room.player2.playerId),
-    })
-  }
-}

@@ -37,7 +37,7 @@ export function GamePage({
   onBackToLobby,
   turnTimer,
 }: GamePageProps) {
-  const { you, opponent, isYourTurn, turnTimeRemaining } = gameState
+  const { you, opponent, isYourTurn } = gameState
   const isWinner = gameOver ? gameOver.winner === you.playerId : false
 
   const [historyHeight, setHistoryHeight] = useState(DEFAULT_HISTORY_HEIGHT)
@@ -136,7 +136,7 @@ export function GamePage({
           <div className="mb-2">
             <TurnIndicator
               isYourTurn={isYourTurn}
-              turnTimeRemaining={turnTimeRemaining}
+              turnTimer={gameState.turnTimer}
               timerKey={gameState.timerKey}
             />
           </div>
