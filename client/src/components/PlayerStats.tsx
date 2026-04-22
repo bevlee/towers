@@ -67,7 +67,7 @@ function ResourceRow({ label, level, amount, bgClass }: ResourceRowProps) {
       : ''
 
   return (
-    <div className={`${bgClass} relative overflow-hidden rounded px-3 py-2 ${rowAnimClass}`}>
+    <div className={`${bgClass} relative overflow-hidden rounded px-1 py-0.5 sm:px-3 sm:py-2 ${rowAnimClass}`}>
       {/* Floating delta for amount */}
       {amountChange.state !== 'none' && (
         <div className={`delta-float pointer-events-none absolute top-1 right-2 z-10 text-sm font-black ${amountChange.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -80,10 +80,10 @@ function ResourceRow({ label, level, amount, bgClass }: ResourceRowProps) {
           {levelChange.delta > 0 ? `+${levelChange.delta}` : levelChange.delta}
         </div>
       )}
-      <div className="text-xs font-bold uppercase tracking-wide opacity-80">{label}</div>
+      <div className="text-[9px] font-bold opacity-80 sm:text-xs sm:uppercase sm:tracking-wide">{label}</div>
       <div className="flex items-baseline justify-between">
-        <span className={`text-2xl font-bold ${amountAnimClass} ${amountColorClass}`}>{amount}</span>
-        <span className={`text-sm opacity-70 ${levelAnimClass} ${levelColorClass}`}>+{level}</span>
+        <span className={`text-sm font-bold sm:text-2xl ${amountAnimClass} ${amountColorClass}`}>{amount}</span>
+        <span className={`text-[9px] opacity-70 sm:text-sm ${levelAnimClass} ${levelColorClass}`}>+{level}</span>
       </div>
     </div>
   )
@@ -93,8 +93,8 @@ export function PlayerStats({ player, side }: PlayerStatsProps) {
   const align = side === 'left' ? 'text-left' : 'text-right'
 
   return (
-    <div className={`flex w-40 flex-col gap-2 ${align}`}>
-      <div className="mb-1 truncate text-sm font-bold text-amber-200">
+    <div className={`flex w-14 flex-col gap-0.5 sm:w-40 sm:gap-2 ${align}`}>
+      <div className="mb-1 hidden truncate text-sm font-bold text-amber-200 sm:block">
         {player.username}
       </div>
       <ResourceRow
