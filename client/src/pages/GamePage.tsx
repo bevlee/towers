@@ -119,9 +119,9 @@ export function GamePage({
       )}
 
       {/* Main game area - fills available space */}
-      <div className="flex min-h-0 flex-1 px-4 py-2">
+      <div className="flex min-h-0 flex-1 px-1 py-1 sm:px-4 sm:py-2">
         {/* Left side: your resources + tower */}
-        <div className="flex min-h-0 gap-3">
+        <div className="flex min-h-0 gap-1 sm:gap-3">
           <PlayerStats player={you} side="left" />
           <TowerVisual tower={you.tower} wall={you.wall} side="left" />
         </div>
@@ -143,7 +143,7 @@ export function GamePage({
         </div>
 
         {/* Right side: opponent tower + resources */}
-        <div className="flex min-h-0 gap-3">
+        <div className="flex min-h-0 gap-1 sm:gap-3">
           <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" />
           <PlayerStats player={opponent} side="right" />
         </div>
