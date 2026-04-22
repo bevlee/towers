@@ -177,7 +177,7 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
   const wallOrder = side === 'left' ? 'flex-row' : 'flex-row-reverse'
 
   return (
-    <div className="flex h-full w-20 flex-col sm:w-28">
+    <div className="flex h-full w-fit flex-col sm:w-28">
       {/* Visual area - fills remaining space, structures anchored to bottom */}
       <div className="relative flex min-h-0 flex-1 items-end justify-center">
         <div className={`flex items-end gap-1 ${wallOrder}`}>
