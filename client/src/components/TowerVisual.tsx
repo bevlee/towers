@@ -176,10 +176,12 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
   // Position wall in front of tower based on side
   const wallOrder = side === 'left' ? 'flex-row' : 'flex-row-reverse'
 
+  const mobileAlign = side === 'left' ? 'justify-end' : 'justify-start'
+
   return (
-    <div className="flex h-full w-fit flex-col sm:w-28">
+    <div className="flex h-full w-full flex-col sm:w-28">
       {/* Visual area - fills remaining space, structures anchored to bottom */}
-      <div className="relative flex min-h-0 flex-1 items-end justify-center">
+      <div className={`relative flex min-h-0 flex-1 items-end ${mobileAlign} sm:justify-center`}>
         <div className={`flex items-end gap-1 ${wallOrder}`}>
           <TowerStructure bricks={towerBricks} side={side} change={towerChange} />
           <WallStructure bricks={wallBricks} side={side} change={wallChange} />

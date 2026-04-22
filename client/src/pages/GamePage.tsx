@@ -122,14 +122,14 @@ export function GamePage({
       {/* Main game area - fills available space */}
       <div className="flex min-h-0 flex-1 px-1 py-1 sm:px-4 sm:py-2">
         {/* Left side: your resources + tower */}
-        <div className="flex min-h-0 gap-1 sm:gap-3">
+        <div className="flex min-h-0 flex-col sm:flex-row sm:gap-3">
           <PlayerStats player={you} side="left" />
           <TowerVisual tower={you.tower} wall={you.wall} side="left" />
         </div>
 
         {/* Center: deck + last played + turn indicator at bottom */}
-        <div className="flex flex-1 flex-col items-center">
-          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-col items-center">
+          <div className="flex flex-1 flex-col items-center justify-start gap-2 pt-1 sm:justify-center sm:pt-0">
             <CardBack />
             <LastPlayedCards history={gameState.history} yourPlayerId={you.playerId} />
           </div>
@@ -144,7 +144,7 @@ export function GamePage({
         </div>
 
         {/* Right side: opponent tower + resources */}
-        <div className="flex min-h-0 gap-1 sm:gap-3">
+        <div className="flex min-h-0 flex-col-reverse sm:flex-row sm:gap-3">
           <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" />
           <PlayerStats player={opponent} side="right" />
         </div>
