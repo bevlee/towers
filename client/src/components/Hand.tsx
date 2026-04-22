@@ -49,7 +49,7 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
           </span>
         </div>
       )}
-      <div className="flex items-center justify-center gap-2 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-2 sm:gap-y-0 sm:px-4 sm:py-3">
         {hand.map((card) => {
           const def = CARD_MAP[card.cardName]
           if (!def) return null
