@@ -164,7 +164,7 @@ export function GamePage({
 
       {/* Drag handle */}
       <div
-        className="flex h-2 flex-shrink-0 cursor-row-resize items-center justify-center border-t border-stone-700 bg-stone-800 hover:bg-stone-700"
+        className="hidden h-2 flex-shrink-0 cursor-row-resize items-center justify-center border-t border-stone-700 bg-stone-800 hover:bg-stone-700 sm:flex"
         onMouseDown={onDragStart}
       >
         <div className="h-0.5 w-10 rounded-full bg-stone-500" />
@@ -172,7 +172,7 @@ export function GamePage({
 
       {/* History panel - resizable */}
       <div
-        className="flex flex-shrink-0 flex-col overflow-hidden bg-stone-950"
+        className="hidden flex-shrink-0 flex-col overflow-hidden bg-stone-950 sm:flex"
         style={{ height: historyHeight }}
       >
         <div className="flex items-center justify-between border-b border-stone-800 px-3 py-1">
