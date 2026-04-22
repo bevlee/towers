@@ -13,6 +13,13 @@ spec:
     - host: towers.bevsoft.com
       http:
         paths:
+          - path: /socket.io/
+            pathType: Prefix
+            backend:
+              service:
+                name: gameserver
+                port:
+                  number: 3000
           - path: /
             pathType: Prefix
             backend:

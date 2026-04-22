@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: client
-          image: docker.io/bevdev1/towers-client:v1.01
+          image: docker.io/bevdev1/towers-client:v1.0
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
@@ -40,7 +41,8 @@ spec:
               memory: 128Mi
 
         - name: server
-          image: docker.io/bevdev1/towers-server:v1.01
+          image: docker.io/bevdev1/towers-server:v1.0
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           env:
@@ -50,6 +52,10 @@ spec:
               value: towers.bevsoft.com
             - name: CLIENT_PORT
               value: '80'
+            - name: TOWERS_PORT
+              value: '3000'
+            - name: TOWERS_CLIENT_ORIGIN
+              value: https://towers.bevsoft.com
           resources:
             requests:
               cpu: 100m

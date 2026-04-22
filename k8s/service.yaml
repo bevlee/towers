@@ -13,3 +13,19 @@ spec:
       port: 80
       targetPort: 80
       protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver
+  namespace: towers
+  labels:
+    app: towers
+spec:
+  selector:
+    app: towers
+  ports:
+    - name: socket
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

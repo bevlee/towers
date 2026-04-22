@@ -1,43 +1,57 @@
 # Kubernetes Manifests
 
-## Build & Deploy
+Deploys Two Towers to a Kubernetes cluster behind Traefik with a wildcard TLS cert.
 
-### Prerequisites
-- Docker buildx enabled: `docker buildx create --use` (once only)
+## Files
+
+| File | Purpose |
+|------|---------|
+| `namespace.yaml` | Creates the `towers` namespace |
+| `deployment.yaml` | Single pod with two containers: `client` (nginx, port 80) and `server` (Node.js, port 3000) |
+| `service.yaml` | ClusterIP services: `nginx` (port 80) and `gameserver` (port 3000) |
+| `ingress.yaml` | Traefik ingress for `towers.bevsoft.com` with TLS; routes `/socket.io/` to `gameserver`, everything else to `nginx` |
+| `certificate.yaml` | cert-manager Certificate for `*.bevsoft.com` (creates `bevsoft-wildcard-tls`) |
+
+Both containers run in the same pod, so the server is reachable at `127.0.0.1:3000` from the nginx container (see `GAMESERVER_HOST` / `GAMESERVER_PORT` env vars).
+
+## Prerequisites
+
+- Docker buildx: `docker buildx create --use` (once only)
 - Logged in to Docker Hub: `docker login`
-- kubectl pointing at your OKE cluster
+- kubectl pointing at the target cluster
+- cert-manager installed in the cluster (for `certificate.yaml`)
+- Traefik installed as the ingress controller
 
-### 1. Build and push multi-arch images
+## Build and push images
+
 OKE runs ARM64 hosts — images must target both `linux/arm64` and `linux/amd64`.
 
+From the `towers/` directory:
+
 ```bash
-export DOCKER_USER=your-dockerhub-username
-
-# Frontend + reverse proxy
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t $DOCKER_USER/onlyone-nginx:latest \
-  --push \
-  ./nginx
+  -t bevdev1/towers-client:v1.0 \
+  -f client/Dockerfile \
+  . \
+  --push
 
-# Game server
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t $DOCKER_USER/onlyone-gameserver:latest \
-  --push \
-  ./gameserver
+  -t bevdev1/towers-server:v1.0 \
+  -f server/Dockerfile \
+  . \
+  --push
 ```
 
-### 2. Update image references in deployment.yaml
-Replace the placeholder image names with your Docker Hub ones:
-- `ghcr.io/bevan/onlyone-nginx:latest` → `$DOCKER_USER/onlyone-nginx:latest`
-- `ghcr.io/bevan/onlyone-gameserver:latest` → `$DOCKER_USER/onlyone-gameserver:latest`
+If you bump the tag, update `deployment.yaml` to match.
 
-### 3. Apply manifests
+## Apply manifests
+
 ```bash
 # First time only
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/secret.yaml   # edit values first
+kubectl apply -f k8s/certificate.yaml   # skip if bevsoft-wildcard-tls already exists
 
 # Every deploy
 kubectl apply -f k8s/deployment.yaml
@@ -45,17 +59,31 @@ kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
-### 4. Verify
+### Force a re-pull of the current image tag
+
+The deployment sets `imagePullPolicy: Always`, so pods always pull on start — but Kubernetes won't recreate pods if nothing in the spec changed. To pull fresh images without bumping the tag:
+
 ```bash
-kubectl get pods -n onlyone -w
-kubectl get ingress -n onlyone
-kubectl logs -n onlyone -l app=gameserver -f
-kubectl logs -n onlyone -l app=nginx -f
+kubectl rollout restart deployment/towers -n towers
 ```
 
-> **Note:** `certificate.yaml` and `cluster-issuer.yaml` are not needed — `bevsoft-wildcard-tls` already exists in the cluster. If it lives in a different namespace than `onlyone`, copy it across:
-> ```bash
-> kubectl get secret bevsoft-wildcard-tls -n SOURCE_NS -o yaml | \
->   sed 's/namespace: SOURCE_NS/namespace: onlyone/' | \
->   kubectl apply -f -
-> ```
+## Verify
+
+```bash
+kubectl get pods -n towers -w
+kubectl get ingress -n towers
+kubectl logs -n towers -l app=towers -c server -f
+kubectl logs -n towers -l app=towers -c client -f
+```
+
+## TLS
+
+`ingress.yaml` references a secret named `bevsoft-wildcard-tls`. If it lives in a different namespace, copy it across:
+
+```bash
+kubectl get secret bevsoft-wildcard-tls -n SOURCE_NS -o yaml | \
+  sed 's/namespace: SOURCE_NS/namespace: towers/' | \
+  kubectl apply -f -
+```
+
+Alternatively, apply `certificate.yaml` to have cert-manager issue a fresh cert into the `towers` namespace.

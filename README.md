@@ -44,15 +44,18 @@ towers/
 | File | Purpose |
 |------|---------|
 | `src/index.ts` | Entry point: Express + Socket.IO setup |
+| `src/config.ts` | Environment variable parsing and defaults |
+| `src/logger.ts` | Pino logger instance |
 | `src/cardEngine.ts` | Pure functions: execute card effects, cost checks |
 | `src/damageResolver.ts` | Wall-absorb and direct damage logic |
 | `src/winChecker.ts` | Three win condition checks |
 | `src/deckManager.ts` | Build, shuffle, deal, draw |
-| `src/turnManager.ts` | Turn flow, timers, resource generation |
+| `src/turnManager.ts` | Turn flow, timers, resource generation, history/timer helpers |
 | `src/gameState.ts` | Create games, project client-safe state |
 | `src/roomManager.ts` | In-memory room CRUD |
-| `src/handlers/lobbyHandlers.ts` | Create/join/list room events |
-| `src/handlers/gameHandlers.ts` | Play card, discard, timeout events |
+| `src/handlers/lobbyHandlers.ts` | Create/join/list room events, disconnect/forfeit, turn timeout |
+| `src/handlers/gameHandlers.ts` | Play card, discard, draw-discard choice |
+| `src/handlers/emit.ts` | Shared helpers to broadcast state/game-over to both players |
 
 ### Client (`client/`)
 
@@ -61,16 +64,20 @@ towers/
 | `src/App.tsx` | State router: username entry, home, game |
 | `src/pages/HomePage.tsx` | Tavern lobby with room list and create form |
 | `src/pages/GamePage.tsx` | Main game board layout |
+| `src/hooks/useSocket.ts` | Establishes and shares the Socket.IO connection |
+| `src/hooks/useLobby.ts` | Lobby state: room list, create/join/leave |
+| `src/hooks/useGameState.ts` | Subscribes to game events, tracks game-over and disconnects |
+| `src/hooks/useCountdown.ts` | Client-side turn timer, reset via `timerKey` |
 | `src/components/Card.tsx` | Individual card with colored border, effect text, cost |
 | `src/components/CardBack.tsx` | Face-down card visual shown in the center of the board |
-| `src/components/CreateGameModal.tsx` | Modal for naming a room and choosing the turn timer |
+| `src/components/CreateGameModal.tsx` | Modal for choosing the turn timer when hosting |
 | `src/components/GameHistory.tsx` | Scrollable log of all played/discarded cards |
-| `src/components/GameList.tsx` | Table of open rooms with join buttons |
+| `src/components/GameList.tsx` | Table of open rooms (host + timer) with join buttons |
 | `src/components/GameOverModal.tsx` | Win/loss overlay |
 | `src/components/Hand.tsx` | Row of 6 cards at screen bottom |
 | `src/components/LastPlayedCards.tsx` | Card(s) played on the most recent turn, shown center board |
 | `src/components/PlayerStats.tsx` | Resource panel (ore, mana, troops) with animated deltas |
-| `src/components/SettingsModal.tsx` | In-game overlay showing room name, timer, and rule constants |
+| `src/components/SettingsModal.tsx` | In-game overlay showing turn timer and rule constants |
 | `src/components/TowerVisual.tsx` | Tower and wall height bars with brick animations |
 | `src/components/TurnIndicator.tsx` | Your/Opponent's Turn badge and countdown timer |
 
