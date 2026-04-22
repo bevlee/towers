@@ -48,7 +48,7 @@ export function Card({
   return (
     <div
       className={`
-        relative flex h-24 w-[4.25rem] flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
+        relative flex h-20 w-14 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
         bg-stone-800 transition-transform
         sm:h-40 sm:w-28
         ${borderColors[color]}

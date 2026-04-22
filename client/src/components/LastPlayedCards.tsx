@@ -54,7 +54,7 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
     <div className={animate ? 'animate-card-play' : ''}>
       <div
         className={`
-          relative flex h-24 w-[4.25rem] flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
+          relative flex h-20 w-14 flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
           sm:h-40 sm:w-28
           ${borderColors[def.color]}
           ${isDiscard ? 'opacity-50' : ''}

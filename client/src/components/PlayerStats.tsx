@@ -80,10 +80,13 @@ function ResourceRow({ label, level, amount, bgClass }: ResourceRowProps) {
           {levelChange.delta > 0 ? `+${levelChange.delta}` : levelChange.delta}
         </div>
       )}
-      <div className="text-[9px] font-bold opacity-80 sm:text-xs sm:uppercase sm:tracking-wide">{label}</div>
+      <div className="flex items-baseline gap-1 text-[9px] font-bold opacity-80 sm:block sm:text-xs sm:uppercase sm:tracking-wide">
+        <span>{label}</span>
+        <span className={`opacity-70 sm:hidden ${levelAnimClass} ${levelColorClass}`}>(+{level})</span>
+      </div>
       <div className="flex items-baseline justify-between">
         <span className={`text-sm font-bold sm:text-2xl ${amountAnimClass} ${amountColorClass}`}>{amount}</span>
-        <span className={`text-[9px] opacity-70 sm:text-sm ${levelAnimClass} ${levelColorClass}`}>+{level}</span>
+        <span className={`hidden text-[9px] opacity-70 sm:inline sm:text-sm ${levelAnimClass} ${levelColorClass}`}>+{level}</span>
       </div>
     </div>
   )
