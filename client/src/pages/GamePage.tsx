@@ -43,6 +43,7 @@ export function GamePage({
   const [historyHeight, setHistoryHeight] = useState(DEFAULT_HISTORY_HEIGHT)
   const [showSettings, setShowSettings] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const dragging = useRef(false)
 
   const onDragStart = useCallback((e: React.MouseEvent) => {
@@ -183,6 +184,43 @@ export function GamePage({
           <GameHistory history={gameState.history} yourPlayerId={you.playerId} />
         </div>
       </div>
+
+      {/* Mobile history collapsed bar */}
+      <button
+        className="flex flex-shrink-0 items-center justify-between border-t border-stone-700 bg-stone-950 px-3 py-1.5 text-xs text-stone-500 sm:hidden"
+        onClick={() => setHistoryOpen(true)}
+      >
+        <span className="font-bold uppercase tracking-wider">History · {gameState.history.length} moves</span>
+        <span aria-hidden>▲</span>
+      </button>
+
+      {/* Mobile history sheet */}
+      {historyOpen && (
+        <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setHistoryOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute inset-x-0 bottom-0 flex h-[60vh] flex-col rounded-t-xl bg-stone-950 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-stone-800 px-3 py-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500">History</span>
+              <span className="text-xs text-stone-600">{gameState.history.length} moves</span>
+              <button
+                className="rounded p-1 text-stone-400 hover:bg-stone-800 hover:text-amber-300"
+                onClick={() => setHistoryOpen(false)}
+                aria-label="Close history"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M4.25 10.75a.75.75 0 0 1 0-1.5h11.5a.75.75 0 0 1 0 1.5H4.25Z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            <div className="min-h-0 flex-1">
+              <GameHistory history={gameState.history} yourPlayerId={you.playerId} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Game over modal */}
       {gameOver && (
