@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: towers
+  namespace: towers
+  labels:
+    app: towers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: towers
+  template:
+    metadata:
+      labels:
+        app: towers
+    spec:
+      containers:
+        - name: client
+          image: docker.io/bevdev1/towers-client:v1.01
+          ports:
+            - containerPort: 80
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: SERVER_URL
+              value: towers.bevsoft.com
+            - name: GAMESERVER_PORT
+              value: '3000'
+            - name: STATIC_ROOT
+              value: /usr/share/nginx/html
+            - name: GAMESERVER_HOST
+              value: '127.0.0.1'
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+        - name: server
+          image: docker.io/bevdev1/towers-server:v1.01
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: SERVER_NAME
+              value: towers.bevsoft.com
+            - name: CLIENT_PORT
+              value: '80'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001

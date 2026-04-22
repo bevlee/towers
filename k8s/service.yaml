@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: towers
+  labels:
+    app: towers
+spec:
+  selector:
+    app: towers
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
