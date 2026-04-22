@@ -88,7 +88,7 @@ function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left'
         return (
           <div
             key={i}
-            className="flex w-5 gap-[1px] sm:w-10"
+            className="flex w-7 gap-[1px] sm:w-10"
             style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0 }}
           >
             {isEven ? (
@@ -107,7 +107,7 @@ function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left'
       })}
       {/* Foundation */}
       {bricks > 0 && (
-        <div className={`mt-0.5 h-1.5 w-6 rounded-sm sm:w-12 ${colorDark}`} />
+        <div className={`mt-0.5 h-1.5 w-9 rounded-sm sm:w-12 ${colorDark}`} />
       )}
     </div>
   )
@@ -135,7 +135,7 @@ function WallStructure({ bricks, side, change }: { bricks: number; side: 'left' 
         return (
           <div
             key={i}
-            className="flex w-4 gap-[1px] sm:w-8"
+            className="flex w-6 gap-[1px] sm:w-8"
             style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0 }}
           >
             {isEven ? (
@@ -154,7 +154,7 @@ function WallStructure({ bricks, side, change }: { bricks: number; side: 'left' 
       })}
       {/* Foundation */}
       {bricks > 0 && (
-        <div className={`mt-0.5 h-1 w-[1.125rem] rounded-sm sm:w-9 ${color}`} />
+        <div className={`mt-0.5 h-1 w-7 rounded-sm sm:w-9 ${color}`} />
       )}
     </div>
   )
@@ -177,7 +177,7 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
   const wallOrder = side === 'left' ? 'flex-row' : 'flex-row-reverse'
 
   return (
-    <div className="flex h-full w-14 flex-col sm:w-28">
+    <div className="flex h-full w-20 flex-col sm:w-28">
       {/* Visual area - fills remaining space, structures anchored to bottom */}
       <div className="relative flex min-h-0 flex-1 items-end justify-center">
         <div className={`flex items-end gap-1 ${wallOrder}`}>
@@ -189,7 +189,7 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
       </div>
 
       {/* Numeric values - anchored below structures, matching visual order */}
-      <div className={`mt-1 flex justify-center gap-1 text-xs sm:mt-2 sm:gap-3 sm:text-sm ${wallOrder}`}>
+      <div className={`mt-1 flex justify-center gap-2 text-sm sm:mt-2 sm:gap-3 sm:text-sm ${wallOrder}`}>
         <span className={`${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? 'text-green-400' : towerChange.state === 'decrease' ? 'text-red-400' : ''}`}>
           <span className="text-xs opacity-60">T</span> {tower}
         </span>

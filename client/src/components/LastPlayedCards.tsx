@@ -54,29 +54,29 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
     <div className={animate ? 'animate-card-play' : ''}>
       <div
         className={`
-          relative flex h-20 w-14 flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
+          relative flex h-28 w-20 flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
           sm:h-40 sm:w-28
           ${borderColors[def.color]}
           ${isDiscard ? 'opacity-50' : ''}
         `}
       >
         {/* Card name */}
-        <div className="rounded-t-md bg-stone-700 px-1 py-0.5 text-center text-[8px] font-bold uppercase leading-tight text-amber-100 sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide">
+        <div className="rounded-t-md bg-stone-700 px-1 py-0.5 text-center text-[9px] font-bold uppercase leading-tight text-amber-100 sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide">
           {entry.cardName}
         </div>
 
         {/* Art placeholder */}
-        <div className={`mx-1 mt-0.5 h-4 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[def.color]}`} />
+        <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[def.color]}`} />
 
         {/* Effect text */}
-        <div className="flex-1 px-1 py-0.5 text-center text-[7px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
+        <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
           {describeEffects(def)}
         </div>
 
         {/* Bottom bar */}
         <div className="flex items-center justify-end px-1 pb-0.5 sm:px-2 sm:pb-1">
           <div
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[def.color]}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[def.color]}`}
           >
             {def.cost}
           </div>
@@ -85,7 +85,7 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
         {/* Discard badge */}
         {isDiscard && (
           <div className="absolute bottom-1 left-1">
-            <span className="px-1 py-0.5 text-[7px] font-bold uppercase text-stone-20/70 sm:px-2 sm:text-[10px]">
+            <span className="px-1 py-0.5 text-[8px] font-bold uppercase text-stone-20/70 sm:px-2 sm:text-[10px]">
               discarded
             </span>
           </div>

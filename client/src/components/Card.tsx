@@ -48,7 +48,7 @@ export function Card({
   return (
     <div
       className={`
-        relative flex h-20 w-14 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
+        relative flex h-28 w-20 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
         bg-stone-800 transition-transform
         sm:h-40 sm:w-28
         ${borderColors[color]}
@@ -58,15 +58,15 @@ export function Card({
       title={canPlay ? 'Click to play' : isYourTurn ? 'Not enough resources' : "Not your turn"}
     >
       {/* Card name */}
-      <div className="rounded-t-md bg-stone-700 px-1 py-0.5 text-center text-[8px] font-bold uppercase leading-tight text-amber-100 sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide">
+      <div className="rounded-t-md bg-stone-700 px-1 py-0.5 text-center text-[9px] font-bold uppercase leading-tight text-amber-100 sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide">
         {cardName}
       </div>
 
       {/* Art placeholder */}
-      <div className={`mx-1 mt-0.5 h-4 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[color]}`} />
+      <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[color]}`} />
 
       {/* Effect text */}
-      <div className="flex-1 px-1 py-0.5 text-center text-[7px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
+      <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
         {effectText}
       </div>
 
@@ -75,7 +75,7 @@ export function Card({
         {/* Discard button */}
         {canDiscard && canAct ? (
           <button
-            className="flex h-4 w-4 items-center justify-center rounded bg-stone-600 text-[10px] font-bold text-red-400 hover:bg-stone-500 sm:h-6 sm:w-6 sm:text-xs"
+            className="flex h-5 w-5 items-center justify-center rounded bg-stone-600 text-xs font-bold text-red-400 hover:bg-stone-500 sm:h-6 sm:w-6 sm:text-xs"
             onClick={(e) => {
               e.stopPropagation()
               onDiscard()
@@ -85,12 +85,12 @@ export function Card({
             -
           </button>
         ) : (
-          <div className="h-4 w-4 sm:h-6 sm:w-6" />
+          <div className="h-5 w-5 sm:h-6 sm:w-6" />
         )}
 
         {/* Cost circle */}
         <div
-          className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[color]}`}
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[color]}`}
         >
           {cost}
         </div>
