@@ -55,7 +55,7 @@ function DeltaFloat({ change }: { change: ChangeInfo }) {
   const color = isPositive ? 'text-green-400' : 'text-red-400'
 
   return (
-    <div className={`delta-float pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 text-lg font-black ${color}`}>
+    <div className={`delta-float pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 text-lg font-black tabular-nums ${color}`}>
       {text}
     </div>
   )
@@ -192,10 +192,10 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
 
       {/* Numeric values - anchored below structures, matching visual order */}
       <div className={`mt-1 flex justify-center gap-2 text-sm sm:mt-2 sm:gap-3 sm:text-sm ${wallOrder}`}>
-        <span className={`${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? 'text-green-400' : towerChange.state === 'decrease' ? 'text-red-400' : ''}`}>
+        <span className={`tabular-nums ${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? 'text-green-400' : towerChange.state === 'decrease' ? 'text-red-400' : ''}`}>
           <span className="text-xs opacity-60">T</span> {tower}
         </span>
-        <span className={`${wallColor} ${wallChange.state !== 'none' ? 'number-pop' : ''} ${wallChange.state === 'increase' ? 'text-green-400' : wallChange.state === 'decrease' ? 'text-red-400' : ''}`}>
+        <span className={`tabular-nums ${wallColor} ${wallChange.state !== 'none' ? 'number-pop' : ''} ${wallChange.state === 'increase' ? 'text-green-400' : wallChange.state === 'decrease' ? 'text-red-400' : ''}`}>
           <span className="text-xs opacity-60">W</span> {wall}
         </span>
       </div>

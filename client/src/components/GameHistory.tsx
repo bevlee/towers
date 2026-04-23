@@ -127,7 +127,7 @@ export function GameHistory({ history, yourPlayerId }: GameHistoryProps) {
 
             return (
               <div key={i} className="flex items-baseline gap-1.5 text-xs leading-relaxed">
-                <span className="w-6 flex-shrink-0 text-right text-stone-600">{entry.turn}</span>
+                <span className="w-6 flex-shrink-0 text-right tabular-nums text-stone-600">{entry.turn}</span>
                 <span className={isYou ? 'font-medium text-amber-200' : 'text-stone-400'}>
                   {name}
                 </span>
