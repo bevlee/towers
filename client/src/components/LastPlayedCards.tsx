@@ -110,13 +110,27 @@ export function LastPlayedCards({ history, yourPlayerId }: LastPlayedCardsProps)
   const isYou = cards[0].playerId === yourPlayerId
   const label = isYou ? 'You played' : `${cards[0].username} played`
 
+  const stackOffsetPx = 18
+  const lastIndex = cards.length - 1
+  const earlier = cards.slice(0, lastIndex)
+  const current = cards[lastIndex]
+
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="text-[10px] uppercase tracking-wider text-stone-500">{label}</div>
-      <div className="flex gap-1 sm:gap-2">
-        {cards.map((entry, i) => (
-          <PlayedCard key={`${history.length}-${i}`} entry={entry} animate={shouldAnimate.current} />
+      <div className="relative" style={{ paddingTop: earlier.length * stackOffsetPx }}>
+        {earlier.map((entry, i) => (
+          <div
+            key={`${history.length}-${i}`}
+            className="absolute left-0 right-0"
+            style={{ top: i * stackOffsetPx, zIndex: i }}
+          >
+            <PlayedCard entry={entry} animate={false} />
+          </div>
         ))}
+        <div className="relative" style={{ zIndex: cards.length }}>
+          <PlayedCard entry={current} animate={shouldAnimate.current} />
+        </div>
       </div>
     </div>
   )

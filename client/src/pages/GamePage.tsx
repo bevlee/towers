@@ -77,8 +77,8 @@ export function GamePage({
 
   return (
     <div className="flex h-screen flex-col bg-stone-900 text-amber-100">
-      {/* Top bar: title + room info + settings/leave */}
-      <div className="flex items-center justify-between border-b border-stone-700 bg-stone-800 px-4 py-1.5">
+      {/* Top bar: title + turn indicator + settings/leave */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-stone-700 bg-stone-800 px-4 py-1.5">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-amber-400">Two Towers</span>
           <span className="text-xs text-stone-500">
@@ -86,7 +86,13 @@ export function GamePage({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <TurnIndicator
+          isYourTurn={isYourTurn}
+          turnTimer={gameState.turnTimer}
+          timerKey={gameState.timerKey}
+        />
+
+        <div className="flex items-center justify-end gap-2">
           {/* Settings gear */}
           <button
             className="rounded p-1.5 text-stone-400 hover:bg-stone-700 hover:text-amber-300"
@@ -127,20 +133,10 @@ export function GamePage({
           <TowerVisual tower={you.tower} wall={you.wall} side="left" />
         </div>
 
-        {/* Center: deck + last played + turn indicator at bottom */}
-        <div className="flex min-w-0 flex-1 flex-col items-center">
-          <div className="flex flex-1 flex-col items-center justify-start gap-2 pt-1 sm:justify-center sm:pt-0">
-            <CardBack />
-            <LastPlayedCards history={gameState.history} yourPlayerId={you.playerId} />
-          </div>
-          {/* Turn indicator anchored at bottom of center, aligned with tower bases */}
-          <div className="mb-2">
-            <TurnIndicator
-              isYourTurn={isYourTurn}
-              turnTimer={gameState.turnTimer}
-              timerKey={gameState.timerKey}
-            />
-          </div>
+        {/* Center: deck + last played */}
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-start gap-2 pt-1 sm:justify-center sm:pt-0">
+          <CardBack />
+          <LastPlayedCards history={gameState.history} yourPlayerId={you.playerId} />
         </div>
 
         {/* Right side: opponent tower + resources */}

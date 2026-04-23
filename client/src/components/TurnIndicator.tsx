@@ -12,15 +12,15 @@ export function TurnIndicator({ isYourTurn, turnTimer, timerKey }: TurnIndicator
   const urgent = turnTime <= 5
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex items-center gap-2">
       <div
-        className={`rounded px-4 py-1 text-lg font-bold uppercase tracking-wide ${
+        className={`rounded px-3 py-1 text-sm font-bold uppercase tracking-wide ${
           isYourTurn ? 'bg-amber-600 text-white' : 'bg-stone-700 text-stone-400'
         }`}
       >
         {isYourTurn ? 'Your Turn' : "Opponent's Turn"}
       </div>
-      <div className={`text-2xl font-bold ${urgent ? 'text-red-400' : 'text-stone-300'}`}>
+      <div className={`text-lg font-bold tabular-nums ${urgent ? 'text-red-400' : 'text-stone-300'}`}>
         {turnTime}s
       </div>
     </div>
