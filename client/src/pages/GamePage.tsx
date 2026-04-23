@@ -76,9 +76,12 @@ export function GamePage({
   }, [onBackToLobby])
 
   return (
-    <div className="flex h-screen flex-col bg-stone-900 text-amber-100">
+    <div className="flex h-dvh flex-col bg-stone-900 text-amber-100">
       {/* Top bar: title + turn indicator + settings/leave */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-stone-700 bg-stone-800 px-4 py-1.5">
+      <div
+        className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-stone-700 bg-stone-800 px-4 py-1.5"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <div className="flex flex-col">
           <span className="text-sm font-bold text-amber-400">Two Towers</span>
           <span className="text-xs text-stone-500">
@@ -184,6 +187,7 @@ export function GamePage({
       {/* Mobile history collapsed bar */}
       <button
         className="flex flex-shrink-0 items-center justify-between border-t border-stone-700 bg-stone-950 px-3 py-1.5 text-xs text-stone-500 sm:hidden"
+        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
         onClick={() => setHistoryOpen(true)}
       >
         <span className="font-bold uppercase tracking-wider">History · {gameState.history.length} moves</span>
