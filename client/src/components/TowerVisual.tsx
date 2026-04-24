@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { WIN_TOWER } from '@towers/shared'
 
 interface TowerVisualProps {
@@ -83,28 +84,34 @@ function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left'
         </div>
       )}
       {/* Bricks */}
-      {Array.from({ length: bricks }).map((_, i) => {
-        const isEven = i % 2 === 0
-        return (
-          <div
-            key={i}
-            className="flex w-7 gap-[1px] sm:w-10"
-            style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0 }}
-          >
-            {isEven ? (
-              <>
-                <div className={`flex-[3] rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
-                <div className={`flex-[2] rounded-[1px] ${colorDark}`} style={{ height: BRICK_HEIGHT }} />
-              </>
-            ) : (
-              <>
-                <div className={`flex-[2] rounded-[1px] ${colorDark}`} style={{ height: BRICK_HEIGHT }} />
-                <div className={`flex-[3] rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
-              </>
-            )}
-          </div>
-        )
-      })}
+      <AnimatePresence initial={false}>
+        {Array.from({ length: bricks }).map((_, i) => {
+          const isEven = i % 2 === 0
+          return (
+            <motion.div
+              key={i}
+              initial={{ scaleY: 0, opacity: 0 }}
+              animate={{ scaleY: 1, opacity: 1 }}
+              exit={{ scaleY: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="flex w-7 gap-[1px] sm:w-10"
+              style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0, originY: 1 }}
+            >
+              {isEven ? (
+                <>
+                  <div className={`flex-[3] rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
+                  <div className={`flex-[2] rounded-[1px] ${colorDark}`} style={{ height: BRICK_HEIGHT }} />
+                </>
+              ) : (
+                <>
+                  <div className={`flex-[2] rounded-[1px] ${colorDark}`} style={{ height: BRICK_HEIGHT }} />
+                  <div className={`flex-[3] rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
+                </>
+              )}
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
       {/* Foundation */}
       {bricks > 0 && (
         <div className={`mt-0.5 h-1.5 w-9 rounded-sm sm:w-12 ${colorDark}`} />
@@ -130,28 +137,34 @@ function WallStructure({ bricks, side, change }: { bricks: number; side: 'left' 
         </div>
       )}
       {/* Bricks */}
-      {Array.from({ length: bricks }).map((_, i) => {
-        const isEven = i % 2 === 0
-        return (
-          <div
-            key={i}
-            className="flex w-6 gap-[1px] sm:w-8"
-            style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0 }}
-          >
-            {isEven ? (
-              <>
-                <div className={`flex-1 rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
-                <div className={`flex-1 rounded-[1px] ${colorLight}`} style={{ height: BRICK_HEIGHT }} />
-              </>
-            ) : (
-              <>
-                <div className={`flex-1 rounded-[1px] ${colorLight}`} style={{ height: BRICK_HEIGHT }} />
-                <div className={`flex-1 rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
-              </>
-            )}
-          </div>
-        )
-      })}
+      <AnimatePresence initial={false}>
+        {Array.from({ length: bricks }).map((_, i) => {
+          const isEven = i % 2 === 0
+          return (
+            <motion.div
+              key={i}
+              initial={{ scaleY: 0, opacity: 0 }}
+              animate={{ scaleY: 1, opacity: 1 }}
+              exit={{ scaleY: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="flex w-6 gap-[1px] sm:w-8"
+              style={{ marginBottom: i < bricks - 1 ? `${BRICK_GAP}px` : 0, originY: 1 }}
+            >
+              {isEven ? (
+                <>
+                  <div className={`flex-1 rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
+                  <div className={`flex-1 rounded-[1px] ${colorLight}`} style={{ height: BRICK_HEIGHT }} />
+                </>
+              ) : (
+                <>
+                  <div className={`flex-1 rounded-[1px] ${colorLight}`} style={{ height: BRICK_HEIGHT }} />
+                  <div className={`flex-1 rounded-[1px] ${color}`} style={{ height: BRICK_HEIGHT }} />
+                </>
+              )}
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
       {/* Foundation */}
       {bricks > 0 && (
         <div className={`mt-0.5 h-1 w-7 rounded-sm sm:w-9 ${color}`} />
