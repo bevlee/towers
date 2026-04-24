@@ -32,6 +32,8 @@ spec:
               value: /usr/share/nginx/html
             - name: GAMESERVER_HOST
               value: '127.0.0.1'
+            - name: PB_URL
+              value: 'https://pb.bevsoft.com'
           resources:
             requests:
               cpu: 50m
