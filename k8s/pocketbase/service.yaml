@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: towers
+  labels:
+    app: pocketbase
+spec:
+  selector:
+    app: pocketbase
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090
+      protocol: TCP
+  # ClusterIP — internal only; traffic reaches clients via the ingress below
+  type: ClusterIP

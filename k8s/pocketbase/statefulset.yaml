@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pocketbase
+  namespace: towers
+  labels:
+    app: pocketbase
+spec:
+  serviceName: pocketbase
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pocketbase
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      # Oracle OKE Ampere A1 — target ARM nodes
+      nodeSelector:
+        kubernetes.io/arch: arm64
+
+      initContainers:
+        # Create or update the superuser on every pod start (idempotent).
+        # Runs before the server starts so it has exclusive access to pb_data.
+        - name: init-superuser
+          image: ghcr.io/muchobien/pocketbase:latest
+          imagePullPolicy: Always
+          workingDir: /pb
+          command:
+            - /pocketbase
+            - superuser
+            - upsert
+            - $(PB_ADMIN_EMAIL)
+            - $(PB_ADMIN_PASSWORD)
+          env:
+            - name: PB_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: email
+            - name: PB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: password
+          volumeMounts:
+            - name: pocketbase-data
+              mountPath: /pb/pb_data
+
+      containers:
+        - name: pocketbase
+          image: ghcr.io/muchobien/pocketbase:latest
+          imagePullPolicy: Always
+          workingDir: /pb
+          args:
+            - serve
+            - --http=0.0.0.0:8090
+          ports:
+            - name: http
+              containerPort: 8090
+          env:
+            - name: PB_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: email
+            - name: PB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: password
+          volumeMounts:
+            - name: pocketbase-data
+              mountPath: /pb/pb_data
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+
+  volumeClaimTemplates:
+    - metadata:
+        name: pocketbase-data
+      spec:
+        accessModes: [ReadWriteOnce]
+        # Oracle OKE block volume storage class
+        storageClassName: oci-bv
+        resources:
+          requests:
+            storage: 10Gi

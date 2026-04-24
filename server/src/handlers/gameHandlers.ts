@@ -7,6 +7,7 @@ import type { TurnManager } from '../turnManager.js'
 import { handleTurnTimeout } from './lobbyHandlers.js'
 import { logger } from '../logger.js'
 import { emitGameOverToBoth, emitGameStateToBoth } from './emit.js'
+import { recordGameResult } from '../statsRecorder.js'
 
 const PlayCardSchema = z.object({
   cardInstanceId: z.string().min(1),
@@ -93,6 +94,10 @@ export function registerGameHandlers(
       if (result.winResult) {
         turnManager.cleanup(roomId)
         emitGameOverToBoth(io, room, result.winResult.winner, result.winResult.reason)
+        const pbIds: Record<string, string> = {}
+        if (room.player1?.pbUserId) pbIds[room.player1.playerId] = room.player1.pbUserId
+        if (room.player2?.pbUserId) pbIds[room.player2.playerId] = room.player2.pbUserId
+        recordGameResult(room.gameState!, pbIds)
         return
       }
 

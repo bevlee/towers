@@ -1,0 +1,204 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pocketbase-setup-script
+  namespace: towers
+data:
+  setup.py: |
+    #!/usr/bin/env python3
+    """
+    One-time PocketBase setup.
+    - Configures users collection: username auth, no email verification, stats fields.
+    - Creates game_results and card_plays collections.
+    Safe to re-run (checks for existence before creating).
+    """
+    import json, os, sys, time, urllib.request, urllib.error
+
+    PB_URL   = os.environ.get("PB_URL", "http://pocketbase:8090").rstrip("/")
+    EMAIL    = os.environ["PB_ADMIN_EMAIL"]
+    PASSWORD = os.environ["PB_ADMIN_PASSWORD"]
+
+
+    def api(path, method="GET", data=None, token=None):
+        url = f"{PB_URL}{path}"
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = token
+        body = json.dumps(data).encode() if data is not None else None
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req) as r:
+                return json.loads(r.read()), r.status
+        except urllib.error.HTTPError as e:
+            return json.loads(e.read()), e.code
+
+
+    # ── Wait for PocketBase ───────────────────────────────────────────────────────
+
+    print("Waiting for PocketBase...", flush=True)
+    for _ in range(60):
+        try:
+            _, status = api("/api/health")
+            if status == 200:
+                break
+        except Exception:
+            pass
+        time.sleep(3)
+    else:
+        print("ERROR: timed out waiting for PocketBase", file=sys.stderr)
+        sys.exit(1)
+
+    print("PocketBase is ready", flush=True)
+
+    # ── Authenticate as superuser ─────────────────────────────────────────────────
+
+    # Try PocketBase v0.22+ endpoint first, fall back to v0.21 admins endpoint.
+    result, status = api("/api/collections/_superusers/auth-with-password", "POST",
+                         {"identity": EMAIL, "password": PASSWORD})
+    if status != 200:
+        result, status = api("/api/admins/auth-with-password", "POST",
+                             {"identity": EMAIL, "password": PASSWORD})
+    if status != 200:
+        print(f"ERROR: failed to authenticate — {result}", file=sys.stderr)
+        sys.exit(1)
+
+    TOKEN = result["token"]
+    print("Authenticated as superuser", flush=True)
+
+    # ── Configure users collection ────────────────────────────────────────────────
+
+    print("Configuring users collection...", flush=True)
+    users, _ = api("/api/collections/users", token=TOKEN)
+
+    # Enable username auth; disable email requirement and email verification.
+    options = users.get("options", {})
+    options.update({
+        "allowEmailAuth":    True,
+        "allowUsernameAuth": True,
+        "requireEmail":      False,
+        "onlyVerified":      False,
+        "minPasswordLength": 8,
+    })
+    users["options"] = options
+
+    # Support both PocketBase v0.21 ("schema") and v0.22+ ("fields") layouts.
+    schema_key = "fields" if "fields" in users else "schema"
+    existing   = {f["name"] for f in users.get(schema_key, [])}
+
+    for field in [
+        {"name": "wins",                "type": "number", "required": False,
+         "options": {"min": 0, "max": None, "noDecimal": True}},
+        {"name": "losses",              "type": "number", "required": False,
+         "options": {"min": 0, "max": None, "noDecimal": True}},
+        {"name": "win_tower_built",     "type": "number", "required": False,
+         "options": {"min": 0, "max": None, "noDecimal": True}},
+        {"name": "win_tower_destroyed", "type": "number", "required": False,
+         "options": {"min": 0, "max": None, "noDecimal": True}},
+        {"name": "win_resources",       "type": "number", "required": False,
+         "options": {"min": 0, "max": None, "noDecimal": True}},
+    ]:
+        if field["name"] not in existing:
+            users.setdefault(schema_key, []).append(field)
+
+    result, status = api(f"/api/collections/{users['id']}", "PATCH", users, TOKEN)
+    if status not in (200, 204):
+        print(f"ERROR: failed to update users collection — {result}", file=sys.stderr)
+        sys.exit(1)
+    print("Users collection configured", flush=True)
+
+    # ── Helpers ───────────────────────────────────────────────────────────────────
+
+    def collection_exists(name):
+        _, status = api(f"/api/collections/{name}", token=TOKEN)
+        return status == 200
+
+    def get_collection_id(name):
+        col, _ = api(f"/api/collections/{name}", token=TOKEN)
+        return col.get("id", name)
+
+    # Use the correct field key for new collections too.
+    USERS_ID = get_collection_id("users")
+
+    def create_collection(payload):
+        result, status = api("/api/collections", "POST", payload, TOKEN)
+        if status in (200, 201):
+            print(f"Created collection: {payload['name']}", flush=True)
+        else:
+            print(f"ERROR creating {payload['name']}: {result}", file=sys.stderr)
+            sys.exit(1)
+
+    # ── game_results collection ───────────────────────────────────────────────────
+
+    if collection_exists("game_results"):
+        print("game_results already exists, skipping", flush=True)
+    else:
+        create_collection({
+            "name": "game_results",
+            "type": "base",
+            schema_key: [
+                {
+                    "name": "winner", "type": "relation", "required": True,
+                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
+                                "minSelect": None, "maxSelect": 1, "displayFields": None},
+                },
+                {
+                    "name": "loser", "type": "relation", "required": True,
+                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
+                                "minSelect": None, "maxSelect": 1, "displayFields": None},
+                },
+                {
+                    "name": "win_reason", "type": "select", "required": False,
+                    "options": {"maxSelect": 1, "values": [
+                        "tower_destroyed", "tower_built", "resources",
+                        "timeout", "afk", "forfeit",
+                    ]},
+                },
+                {
+                    "name": "turn_count", "type": "number", "required": False,
+                    "options": {"min": None, "max": None, "noDecimal": True},
+                },
+            ],
+        })
+
+    # ── card_plays collection ─────────────────────────────────────────────────────
+
+    if collection_exists("card_plays"):
+        print("card_plays already exists, skipping", flush=True)
+    else:
+        GAME_RESULTS_ID = get_collection_id("game_results")
+        create_collection({
+            "name": "card_plays",
+            "type": "base",
+            schema_key: [
+                {
+                    "name": "game", "type": "relation", "required": True,
+                    "options": {"collectionId": GAME_RESULTS_ID, "cascadeDelete": True,
+                                "minSelect": None, "maxSelect": 1, "displayFields": None},
+                },
+                {
+                    "name": "player", "type": "relation", "required": True,
+                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
+                                "minSelect": None, "maxSelect": 1, "displayFields": None},
+                },
+                {
+                    "name": "card_name", "type": "text", "required": True,
+                    "options": {"min": None, "max": 64, "pattern": ""},
+                },
+                {
+                    "name": "card_color", "type": "select", "required": False,
+                    "options": {"maxSelect": 1, "values": ["red", "blue", "green"]},
+                },
+                {
+                    "name": "action", "type": "select", "required": True,
+                    "options": {"maxSelect": 1, "values": [
+                        "play", "discard", "timeout_discard",
+                    ]},
+                },
+                {
+                    "name": "turn_number", "type": "number", "required": False,
+                    "options": {"min": None, "max": None, "noDecimal": True},
+                },
+            ],
+        })
+
+    print("Setup complete!", flush=True)

@@ -56,6 +56,18 @@ spec:
               value: '3000'
             - name: TOWERS_CLIENT_ORIGIN
               value: https://towers.bevsoft.com
+            - name: PB_URL
+              value: 'http://pocketbase:8090'
+            - name: PB_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: email
+            - name: PB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: password
           resources:
             requests:
               cpu: 100m
