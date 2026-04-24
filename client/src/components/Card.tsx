@@ -1,4 +1,5 @@
 import type { ResourceColor } from '@towers/shared'
+import { state } from '../theme/state'
 
 interface CardProps {
   cardName: string
@@ -11,24 +12,6 @@ interface CardProps {
   canDiscard: boolean
   onPlay: () => void
   onDiscard: () => void
-}
-
-const borderColors: Record<ResourceColor, string> = {
-  red: 'border-red-600',
-  blue: 'border-blue-600',
-  green: 'border-green-600',
-}
-
-const gradientColors: Record<ResourceColor, string> = {
-  red: 'from-red-800 to-red-950',
-  blue: 'from-blue-800 to-blue-950',
-  green: 'from-green-800 to-green-950',
-}
-
-const costBgColors: Record<ResourceColor, string> = {
-  red: 'bg-red-700',
-  blue: 'bg-blue-700',
-  green: 'bg-green-700',
 }
 
 export function Card({
@@ -51,7 +34,7 @@ export function Card({
         relative flex h-28 w-20 flex-shrink-0 cursor-pointer flex-col rounded-lg border-2
         bg-stone-800 transition-transform
         sm:h-40 sm:w-28
-        ${borderColors[color]}
+        ${state.cardBorder[color]}
         ${canPlay ? 'hover:scale-105 hover:-translate-y-2' : 'opacity-60'}
       `}
       onClick={canPlay ? onPlay : undefined}
@@ -63,7 +46,7 @@ export function Card({
       </div>
 
       {/* Art placeholder */}
-      <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[color]}`} />
+      <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${state.cardGradient[color]}`} />
 
       {/* Effect text */}
       <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
@@ -90,7 +73,7 @@ export function Card({
 
         {/* Cost circle */}
         <div
-          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[color]}`}
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${state.cardCostBg[color]}`}
         >
           {cost}
         </div>

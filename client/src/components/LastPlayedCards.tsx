@@ -1,29 +1,12 @@
 import { useEffect, useRef } from 'react'
-import type { GameHistoryEntry, ResourceColor } from '@towers/shared'
+import type { GameHistoryEntry } from '@towers/shared'
 import { CARD_MAP } from '@towers/shared'
 import { describeEffects } from '../utils/cardText'
+import { state } from '../theme/state'
 
 interface LastPlayedCardsProps {
   history: GameHistoryEntry[]
   yourPlayerId: string
-}
-
-const borderColors: Record<ResourceColor, string> = {
-  red: 'border-red-600',
-  blue: 'border-blue-600',
-  green: 'border-green-600',
-}
-
-const gradientColors: Record<ResourceColor, string> = {
-  red: 'from-red-800 to-red-950',
-  blue: 'from-blue-800 to-blue-950',
-  green: 'from-green-800 to-green-950',
-}
-
-const costBgColors: Record<ResourceColor, string> = {
-  red: 'bg-red-700',
-  blue: 'bg-blue-700',
-  green: 'bg-green-700',
 }
 
 /** Collect the most recent consecutive actions by the same player from end of history. */
@@ -56,7 +39,7 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
         className={`
           relative flex h-28 w-20 flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
           sm:h-40 sm:w-28
-          ${borderColors[def.color]}
+          ${state.cardBorder[def.color]}
           ${isDiscard ? 'opacity-50' : ''}
         `}
       >
@@ -66,7 +49,7 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
         </div>
 
         {/* Art placeholder */}
-        <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${gradientColors[def.color]}`} />
+        <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${state.cardGradient[def.color]}`} />
 
         {/* Effect text */}
         <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
@@ -76,7 +59,7 @@ function PlayedCard({ entry, animate }: { entry: GameHistoryEntry; animate: bool
         {/* Bottom bar */}
         <div className="flex items-center justify-end px-1 pb-0.5 sm:px-2 sm:pb-1">
           <div
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${costBgColors[def.color]}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${state.cardCostBg[def.color]}`}
           >
             {def.cost}
           </div>

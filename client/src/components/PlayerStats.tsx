@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerState } from '@towers/shared'
+import { state } from '../theme/state'
 
 interface PlayerStatsProps {
   player: PlayerState | Omit<PlayerState, 'hand'>
@@ -48,16 +49,16 @@ function ResourceRow({ label, level, amount, bgClass }: ResourceRowProps) {
 
   const amountAnimClass = amountChange.state !== 'none' ? 'number-pop' : ''
   const amountColorClass = amountChange.state === 'increase'
-    ? 'text-green-400'
+    ? state.gain
     : amountChange.state === 'decrease'
-      ? 'text-red-400'
+      ? state.danger
       : ''
 
   const levelAnimClass = levelChange.state !== 'none' ? 'number-pop' : ''
   const levelColorClass = levelChange.state === 'increase'
-    ? 'text-green-400'
+    ? state.gain
     : levelChange.state === 'decrease'
-      ? 'text-red-400'
+      ? state.danger
       : ''
 
   const rowAnimClass = amountChange.state === 'increase'
@@ -70,13 +71,13 @@ function ResourceRow({ label, level, amount, bgClass }: ResourceRowProps) {
     <div className={`${bgClass} relative overflow-hidden rounded px-1.5 py-1 sm:px-3 sm:py-2 ${rowAnimClass}`}>
       {/* Floating delta for amount */}
       {amountChange.state !== 'none' && (
-        <div className={`delta-float pointer-events-none absolute top-1 right-2 z-10 text-sm font-black ${amountChange.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className={`delta-float pointer-events-none absolute top-1 right-2 z-10 text-sm font-black ${amountChange.delta > 0 ? state.gain : state.danger}`}>
           {amountChange.delta > 0 ? `+${amountChange.delta}` : amountChange.delta}
         </div>
       )}
       {/* Floating delta for level */}
       {levelChange.state !== 'none' && (
-        <div className={`delta-float pointer-events-none absolute right-2 bottom-1 z-10 text-xs font-black ${levelChange.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className={`delta-float pointer-events-none absolute right-2 bottom-1 z-10 text-xs font-black ${levelChange.delta > 0 ? state.gain : state.danger}`}>
           {levelChange.delta > 0 ? `+${levelChange.delta}` : levelChange.delta}
         </div>
       )}
@@ -104,19 +105,19 @@ export function PlayerStats({ player, side }: PlayerStatsProps) {
         label="Ore"
         level={player.mineLevel}
         amount={player.ore}
-        bgClass="bg-red-900/70"
+        bgClass={state.resourceRow.ore}
       />
       <ResourceRow
         label="Mana"
         level={player.monasteryLevel}
         amount={player.mana}
-        bgClass="bg-blue-900/70"
+        bgClass={state.resourceRow.mana}
       />
       <ResourceRow
         label="Troops"
         level={player.barracksLevel}
         amount={player.troops}
-        bgClass="bg-green-900/70"
+        bgClass={state.resourceRow.troops}
       />
     </div>
   )

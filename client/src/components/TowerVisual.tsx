@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { WIN_TOWER } from '@towers/shared'
+import { state } from '../theme/state'
 
 interface TowerVisualProps {
   tower: number
@@ -52,7 +53,7 @@ function DeltaFloat({ change }: { change: ChangeInfo }) {
   if (change.state === 'none') return null
   const isPositive = change.delta > 0
   const text = isPositive ? `+${change.delta}` : `${change.delta}`
-  const color = isPositive ? 'text-green-400' : 'text-red-400'
+  const color = isPositive ? state.gain : state.danger
 
   return (
     <div className={`delta-float pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 text-lg font-black ${color}`}>
@@ -62,8 +63,9 @@ function DeltaFloat({ change }: { change: ChangeInfo }) {
 }
 
 function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left' | 'right'; change: ChangeInfo }) {
-  const color = side === 'left' ? 'bg-amber-700' : 'bg-sky-700'
-  const colorDark = side === 'left' ? 'bg-amber-800' : 'bg-sky-800'
+  const palette = side === 'left' ? state.mine : state.theirs
+  const color = palette.tower
+  const colorDark = palette.towerDark
   const animClass = structureAnimClass(change.state)
 
   return (
@@ -114,8 +116,9 @@ function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left'
 }
 
 function WallStructure({ bricks, side, change }: { bricks: number; side: 'left' | 'right'; change: ChangeInfo }) {
-  const color = side === 'left' ? 'bg-amber-900' : 'bg-sky-900'
-  const colorLight = side === 'left' ? 'bg-amber-800' : 'bg-sky-800'
+  const palette = side === 'left' ? state.mine : state.theirs
+  const color = palette.wall
+  const colorLight = palette.wallLight
   const animClass = structureAnimClass(change.state)
 
   return (
@@ -170,7 +173,8 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
   const towerChange = useChangeDetect(tower)
   const wallChange = useChangeDetect(wall)
 
-  const towerColor = side === 'left' ? 'text-amber-400' : 'text-sky-400'
+  const palette = side === 'left' ? state.mine : state.theirs
+  const towerColor = palette.towerNum
   const wallColor = 'text-stone-400'
 
   // Position wall in front of tower based on side
@@ -192,10 +196,10 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
 
       {/* Numeric values - anchored below structures, matching visual order */}
       <div className={`mt-1 flex justify-center gap-2 text-sm sm:mt-2 sm:gap-3 sm:text-sm ${wallOrder}`}>
-        <span className={`${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? 'text-green-400' : towerChange.state === 'decrease' ? 'text-red-400' : ''}`}>
+        <span className={`${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? state.gain : towerChange.state === 'decrease' ? state.danger : ''}`}>
           <span className="text-xs opacity-60">T</span> {tower}
         </span>
-        <span className={`${wallColor} ${wallChange.state !== 'none' ? 'number-pop' : ''} ${wallChange.state === 'increase' ? 'text-green-400' : wallChange.state === 'decrease' ? 'text-red-400' : ''}`}>
+        <span className={`${wallColor} ${wallChange.state !== 'none' ? 'number-pop' : ''} ${wallChange.state === 'increase' ? state.gain : wallChange.state === 'decrease' ? state.danger : ''}`}>
           <span className="text-xs opacity-60">W</span> {wall}
         </span>
       </div>
