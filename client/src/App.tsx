@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { GAME_EVENTS } from '@towers/shared'
-import type { GameStartPayload } from '@towers/shared'
+import type { GameConfig, GameStartPayload } from '@towers/shared'
 import { socket } from './socket'
 import { useSocket } from './hooks/useSocket'
 import { useGameState } from './hooks/useGameState'
@@ -39,8 +39,8 @@ export default function App() {
     setScreen('home')
   }, [currentRoom, leaveRoom, resetGame])
 
-  const handleCreate = useCallback((turnTimer: number) => {
-    createRoom(turnTimer, username)
+  const handleCreate = useCallback((turnTimer: number, gameConfig: GameConfig) => {
+    createRoom(turnTimer, username, gameConfig)
   }, [createRoom, username])
 
   const handleJoin = useCallback((roomId: string) => {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import type { RoomInfo } from '@towers/shared'
+import type { GameConfig, RoomInfo } from '@towers/shared'
 import { LOBBY_EVENTS } from '@towers/shared'
 import type { RoomListPayload, RoomCreatedPayload, RoomJoinedPayload, ErrorPayload } from '@towers/shared'
 import { socket } from '../socket'
@@ -43,9 +43,9 @@ export function useLobby() {
     socket.emit(LOBBY_EVENTS.LIST_ROOMS)
   }, [])
 
-  const createRoom = useCallback((turnTimer: number, username: string) => {
+  const createRoom = useCallback((turnTimer: number, username: string, gameConfig: GameConfig) => {
     setError(null)
-    socket.emit(LOBBY_EVENTS.CREATE_ROOM, { turnTimer, username })
+    socket.emit(LOBBY_EVENTS.CREATE_ROOM, { turnTimer, username, gameConfig })
   }, [])
 
   const joinRoom = useCallback((roomId: string, username: string) => {

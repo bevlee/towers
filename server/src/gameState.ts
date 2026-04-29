@@ -1,6 +1,7 @@
 import type {
   CardInstance,
   ClientGameState,
+  GameConfig,
   GameState,
   PlayerState,
 } from '@towers/shared'
@@ -11,7 +12,21 @@ import {
   STARTING_TOWER,
   STARTING_WALL,
 } from '@towers/shared'
-import { buildDeck, dealHands, shuffleDeck } from './deckManager.js'
+import { buildDeck, dealHands, seededShuffleDeck, shuffleDeck } from './deckManager.js'
+
+export function defaultGameConfig(): GameConfig {
+  return {
+    seed: '',
+    ore: STARTING_RESOURCES,
+    mana: STARTING_RESOURCES,
+    troops: STARTING_RESOURCES,
+    mineLevel: STARTING_LEVELS,
+    monasteryLevel: STARTING_LEVELS,
+    barracksLevel: STARTING_LEVELS,
+    tower: STARTING_TOWER,
+    wall: STARTING_WALL,
+  }
+}
 
 /**
  * Create the initial PlayerState for a player with their dealt hand.
@@ -20,25 +35,26 @@ export function createInitialPlayerState(
   playerId: string,
   username: string,
   hand: CardInstance[],
+  config: GameConfig,
 ): PlayerState {
   return {
     playerId,
     username,
-    tower: STARTING_TOWER,
-    wall: STARTING_WALL,
-    ore: STARTING_RESOURCES,
-    mana: STARTING_RESOURCES,
-    troops: STARTING_RESOURCES,
-    mineLevel: STARTING_LEVELS,
-    monasteryLevel: STARTING_LEVELS,
-    barracksLevel: STARTING_LEVELS,
+    tower: config.tower,
+    wall: config.wall,
+    ore: config.ore,
+    mana: config.mana,
+    troops: config.troops,
+    mineLevel: config.mineLevel,
+    monasteryLevel: config.monasteryLevel,
+    barracksLevel: config.barracksLevel,
     hand,
   }
 }
 
 /**
  * Create a full initial GameState for two players.
- * Builds and shuffles the deck, deals hands, and initialises all state.
+ * Builds and shuffles the deck (seeded if config.seed is non-empty), deals hands, and initialises all state.
  */
 export function createGame(
   p1Id: string,
@@ -46,12 +62,14 @@ export function createGame(
   p2Id: string,
   p2Name: string,
   turnTimer: number,
+  config: GameConfig,
 ): GameState {
-  const deck = shuffleDeck(buildDeck())
+  const rawDeck = buildDeck()
+  const deck = config.seed ? seededShuffleDeck(rawDeck, config.seed) : shuffleDeck(rawDeck)
   const { hands, remainingDeck } = dealHands(deck, HAND_SIZE)
 
-  const player1 = createInitialPlayerState(p1Id, p1Name, hands[0])
-  const player2 = createInitialPlayerState(p2Id, p2Name, hands[1])
+  const player1 = createInitialPlayerState(p1Id, p1Name, hands[0], config)
+  const player2 = createInitialPlayerState(p2Id, p2Name, hands[1], config)
 
   return {
     phase: 'playing',

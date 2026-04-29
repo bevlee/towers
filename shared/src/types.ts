@@ -94,10 +94,23 @@ export interface ClientGameState {
   history: GameHistoryEntry[]
 }
 
+export interface GameConfig {
+  seed: string
+  ore: number
+  mana: number
+  troops: number
+  mineLevel: number
+  monasteryLevel: number
+  barracksLevel: number
+  tower: number
+  wall: number
+}
+
 export interface RoomInfo {
   id: string
   name: string
   player1: { playerId: string; username: string } | null
   player2: { playerId: string; username: string } | null
   turnTimer: number
+  gameConfig: GameConfig
 }

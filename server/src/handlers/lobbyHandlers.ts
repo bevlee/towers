@@ -2,14 +2,29 @@ import type { Server, Socket } from 'socket.io'
 import { z } from 'zod'
 import { LOBBY_EVENTS, GAME_EVENTS, CARD_MAP } from '@towers/shared'
 import type { Room, RoomManager } from '../roomManager.js'
+import type { GameConfig } from '@towers/shared'
 import type { TurnManager } from '../turnManager.js'
-import { createGame, getClientState } from '../gameState.js'
+import { createGame, defaultGameConfig, getClientState } from '../gameState.js'
 import { logger } from '../logger.js'
 import { emitGameOverToBoth, emitGameStateToBoth, emitToBothPlayers } from './emit.js'
+import { checkWin } from '../winChecker.js'
+
+const GameConfigSchema = z.object({
+  seed: z.string().max(64).default(''),
+  ore: z.number().int().min(0).max(999),
+  mana: z.number().int().min(0).max(999),
+  troops: z.number().int().min(0).max(999),
+  mineLevel: z.number().int().min(1).max(10),
+  monasteryLevel: z.number().int().min(1).max(10),
+  barracksLevel: z.number().int().min(1).max(10),
+  tower: z.number().int().min(1).max(200),
+  wall: z.number().int().min(0).max(200),
+})
 
 const CreateRoomSchema = z.object({
   turnTimer: z.number().int().min(15).max(30),
   username: z.string().min(1).max(20),
+  gameConfig: GameConfigSchema.optional(),
 })
 
 const JoinRoomSchema = z.object({
@@ -41,14 +56,15 @@ export function registerLobbyHandlers(
       return
     }
 
-    const { turnTimer, username } = parsed.data
+    const { turnTimer, username, gameConfig: rawConfig } = parsed.data
     const playerId = socket.data.playerId as string
+    const gameConfig: GameConfig = rawConfig ?? defaultGameConfig()
 
     const room = roomManager.createRoom(`${username}'s game`, turnTimer, {
       playerId,
       username,
       socketId: socket.id,
-    })
+    }, gameConfig)
 
     socket.join(room.id)
     socket.data.roomId = room.id
@@ -62,6 +78,7 @@ export function registerLobbyHandlers(
         player1: { playerId, username },
         player2: null,
         turnTimer: room.turnTimer,
+        gameConfig: room.gameConfig,
       },
     })
 
@@ -105,6 +122,7 @@ export function registerLobbyHandlers(
         player1: room.player1 ? { playerId: room.player1.playerId, username: room.player1.username } : null,
         player2: room.player2 ? { playerId: room.player2.playerId, username: room.player2.username } : null,
         turnTimer: room.turnTimer,
+        gameConfig: room.gameConfig,
       },
     })
 
@@ -116,6 +134,7 @@ export function registerLobbyHandlers(
         room.player2.playerId,
         room.player2.username,
         room.turnTimer,
+        room.gameConfig,
       )
       room.gameState = gameState
 
@@ -293,6 +312,16 @@ export function handleTurnTimeout(
     room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', cardToDiscard.cardName)
     room.gameState = turnManager.switchTurn(room.gameState)
     room.gameState = turnManager.generateResources(room.gameState)
+
+    const genWin1 = checkWin(room.gameState)
+    if (genWin1) {
+      room.gameState = { ...room.gameState, phase: 'finished', winner: genWin1.winner, winReason: genWin1.reason }
+      turnManager.cleanup(roomId)
+      emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, { discardedCardInstanceId: cardToDiscard.id })
+      emitGameOverToBoth(io, room, genWin1.winner, genWin1.reason)
+      return
+    }
+
     room.gameState = turnManager.resetTurnTimer(room.gameState)
 
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
@@ -318,8 +347,18 @@ export function handleTurnTimeout(
   try {
     const result = turnManager.handleDiscard(room.gameState, randomCard.id)
     room.gameState = turnManager.generateResources(result.state)
-    room.gameState = turnManager.resetTurnTimer(room.gameState)
     room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', randomCard.cardName)
+
+    const genWin2 = checkWin(room.gameState)
+    if (genWin2) {
+      room.gameState = { ...room.gameState, phase: 'finished', winner: genWin2.winner, winReason: genWin2.reason }
+      turnManager.cleanup(roomId)
+      emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, { discardedCardInstanceId: randomCard.id })
+      emitGameOverToBoth(io, room, genWin2.winner, genWin2.reason)
+      return
+    }
+
+    room.gameState = turnManager.resetTurnTimer(room.gameState)
 
     emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
       discardedCardInstanceId: randomCard.id,

@@ -36,6 +36,40 @@ export function shuffleDeck(deck: CardInstance[]): CardInstance[] {
   return shuffled
 }
 
+/** Hash a string to a 32-bit integer for use as a PRNG seed. */
+function hashSeed(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = Math.imul(31, h) + s.charCodeAt(i) | 0
+  }
+  return h
+}
+
+/**
+ * Deterministic Fisher-Yates shuffle using mulberry32 PRNG.
+ * Same seed always produces the same card order.
+ */
+export function seededShuffleDeck(deck: CardInstance[], seed: string): CardInstance[] {
+  const shuffled = [...deck]
+
+  let s = hashSeed(seed) | 0
+  function rand(): number {
+    s = s + 0x6D2B79F5 | 0
+    let t = Math.imul(s ^ (s >>> 15), 1 | s)
+    t = t + Math.imul(t ^ (t >>> 7), 61 | t) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    const temp = shuffled[i]
+    shuffled[i] = shuffled[j]
+    shuffled[j] = temp
+  }
+
+  return shuffled
+}
+
 /**
  * Deal alternating cards to two hands from the top of the deck.
  * Returns the two hands and the remaining deck.

@@ -1,4 +1,4 @@
-import type { GameState, RoomInfo } from '@towers/shared'
+import type { GameConfig, GameState, RoomInfo } from '@towers/shared'
 import crypto from 'node:crypto'
 
 interface PlayerSlot {
@@ -14,6 +14,7 @@ export interface Room {
   player2: PlayerSlot | null
   turnTimer: number
   gameState: GameState | null
+  gameConfig: GameConfig
 }
 
 /**
@@ -23,7 +24,7 @@ export class RoomManager {
   private rooms: Map<string, Room> = new Map()
 
   /** Create a new room with the given player as player1. */
-  createRoom(name: string, turnTimer: number, player: PlayerSlot): Room {
+  createRoom(name: string, turnTimer: number, player: PlayerSlot, gameConfig: GameConfig): Room {
     const id = crypto.randomUUID()
     const room: Room = {
       id,
@@ -32,6 +33,7 @@ export class RoomManager {
       player2: null,
       turnTimer,
       gameState: null,
+      gameConfig,
     }
     this.rooms.set(id, room)
     return room
@@ -76,12 +78,12 @@ export class RoomManager {
     return this.rooms.get(roomId)
   }
 
-  /** List all rooms that have an empty player2 slot (open for joining). */
+  /** List all rooms that are waiting for a second player (no player2 and no game started). */
   listOpenRooms(): RoomInfo[] {
     const open: RoomInfo[] = []
 
     for (const room of this.rooms.values()) {
-      if (!room.player2) {
+      if (!room.player2 && !room.gameState) {
         open.push(this.toRoomInfo(room))
       }
     }
@@ -119,6 +121,7 @@ export class RoomManager {
         ? { playerId: room.player2.playerId, username: room.player2.username }
         : null,
       turnTimer: room.turnTimer,
+      gameConfig: room.gameConfig,
     }
   }
 }

@@ -7,6 +7,7 @@ import type { TurnManager } from '../turnManager.js'
 import { handleTurnTimeout } from './lobbyHandlers.js'
 import { logger } from '../logger.js'
 import { emitGameOverToBoth, emitGameStateToBoth } from './emit.js'
+import { checkWin } from '../winChecker.js'
 
 const PlayCardSchema = z.object({
   cardInstanceId: z.string().min(1),
@@ -120,6 +121,15 @@ export function registerGameHandlers(
       }
 
       room.gameState = turnManager.generateResources(room.gameState)
+
+      const genWin = checkWin(room.gameState)
+      if (genWin) {
+        room.gameState = { ...room.gameState, phase: 'finished', winner: genWin.winner, winReason: genWin.reason }
+        turnManager.cleanup(roomId)
+        emitGameOverToBoth(io, room, genWin.winner, genWin.reason)
+        return
+      }
+
       room.gameState = turnManager.resetTurnTimer(room.gameState)
       emitGameStateToBoth(io, room)
       turnManager.startTurn(roomId, room.gameState, () => {
@@ -162,8 +172,17 @@ export function registerGameHandlers(
       const resetState = turnManager.resetTimeouts(state)
       const result = turnManager.handleDiscard(resetState, cardInstanceId)
       room.gameState = turnManager.generateResources(result.state)
-      room.gameState = turnManager.resetTurnTimer({ ...room.gameState, lastPlayedCard: undefined })
       room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'discard', cardInstance.cardName)
+
+      const genWin = checkWin(room.gameState)
+      if (genWin) {
+        room.gameState = { ...room.gameState, phase: 'finished', winner: genWin.winner, winReason: genWin.reason, lastPlayedCard: undefined }
+        turnManager.cleanup(roomId)
+        emitGameOverToBoth(io, room, genWin.winner, genWin.reason)
+        return
+      }
+
+      room.gameState = turnManager.resetTurnTimer({ ...room.gameState, lastPlayedCard: undefined })
 
       emitGameStateToBoth(io, room)
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { RoomInfo } from '@towers/shared'
+import type { GameConfig, RoomInfo } from '@towers/shared'
 import { GameList } from '../components/GameList'
 import { CreateGameModal } from '../components/CreateGameModal'
 
@@ -7,7 +7,7 @@ interface HomePageProps {
   rooms: RoomInfo[]
   onRefresh: () => void
   onJoin: (roomId: string) => void
-  onCreate: (turnTimer: number) => void
+  onCreate: (turnTimer: number, gameConfig: GameConfig) => void
   onLeaveRoom: (roomId: string) => void
   currentRoom: RoomInfo | null
   error: string | null
@@ -80,8 +80,8 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
       {showCreate && (
         <CreateGameModal
           onClose={() => setShowCreate(false)}
-          onCreate={(timer) => {
-            onCreate(timer)
+          onCreate={(timer, config) => {
+            onCreate(timer, config)
             setShowCreate(false)
           }}
         />
