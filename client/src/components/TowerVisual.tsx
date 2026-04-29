@@ -67,7 +67,7 @@ function TowerStructure({ bricks, side, change }: { bricks: number; side: 'left'
   const animClass = structureAnimClass(change.state)
 
   return (
-    <div className={`relative flex flex-col-reverse items-center ${animClass}`}>
+    <div className={`relative flex w-9 flex-col-reverse items-center sm:w-12 ${animClass}`}>
       <DeltaFloat change={change} />
       {/* Turret cap */}
       {bricks > 0 && (
@@ -119,7 +119,7 @@ function WallStructure({ bricks, side, change }: { bricks: number; side: 'left' 
   const animClass = structureAnimClass(change.state)
 
   return (
-    <div className={`relative flex flex-col-reverse items-center ${animClass}`}>
+    <div className={`relative flex w-7 flex-col-reverse items-center sm:w-9 ${animClass}`}>
       <DeltaFloat change={change} />
       {/* Crenellations */}
       {bricks > 0 && (
