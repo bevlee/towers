@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { GameConfig, RoomInfo } from '@towers/shared'
 import { GameList } from '../components/GameList'
 import { CreateGameModal } from '../components/CreateGameModal'
+import { HowToPlay } from '../components/HowToPlay'
 
 interface HomePageProps {
   rooms: RoomInfo[]
@@ -74,6 +75,9 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
 
         {/* Game list */}
         <GameList rooms={rooms} onJoin={onJoin} currentRoom={currentRoom} />
+
+        {/* Rules */}
+        <HowToPlay />
       </main>
 
       {/* Create modal */}
