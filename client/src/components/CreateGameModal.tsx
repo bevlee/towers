@@ -51,8 +51,11 @@ function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
 }
 
 export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
-  const [turnTimer, setTurnTimer] = useState(20)
+  const [gameMode, setGameMode] = useState<'quick'>('quick')
   const [config, setConfig] = useState<GameConfig>(defaultConfig)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const turnTimer = gameMode === 'quick' ? 20 : 20
 
   function set<K extends keyof GameConfig>(key: K, value: GameConfig[K]) {
     setConfig((c) => ({ ...c, [key]: value }))
@@ -75,71 +78,84 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
       >
         <h2 className="text-xl font-bold text-amber-200">Create a Challenge</h2>
 
-        {/* Turn timer */}
+        {/* Game Mode */}
         <label className="flex flex-col gap-1">
-          <span className="text-sm text-stone-400">Turn Timer</span>
+          <span className="text-sm text-stone-400">Game Mode</span>
           <select
-            value={turnTimer}
-            onChange={(e) => setTurnTimer(Number(e.target.value))}
+            value={gameMode}
+            onChange={(e) => setGameMode(e.target.value as 'quick')}
             className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 outline-none focus:border-amber-500"
             autoFocus
           >
-            <option value={15}>15 seconds</option>
-            <option value={20}>20 seconds</option>
-            <option value={30}>30 seconds</option>
+            <option value="quick">Quick Game</option>
+            <option value="ranked" disabled>Ranked Game (Coming Soon)</option>
           </select>
         </label>
 
         <hr className="border-stone-700" />
 
-        {/* Seed */}
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-stone-400">
-            Deck Seed <span className="text-stone-500">(leave blank for random)</span>
-          </span>
-          <input
-            type="text"
-            value={config.seed}
-            onChange={(e) => set('seed', e.target.value.slice(0, 64))}
-            placeholder="e.g. my-seed-42"
-            className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
-          />
-        </label>
+        {/* Advanced Options Dropdown */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center justify-between rounded bg-stone-700 px-3 py-2 hover:bg-stone-600"
+        >
+          <span className="text-sm font-semibold text-stone-300">Advanced Options</span>
+          <span className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>▼</span>
+        </button>
 
-        <hr className="border-stone-700" />
+        {showAdvanced && (
+          <>
+            {/* Seed */}
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-stone-400">
+                Deck Seed <span className="text-stone-500">(leave blank for random)</span>
+              </span>
+              <input
+                type="text"
+                value={config.seed}
+                onChange={(e) => set('seed', e.target.value.slice(0, 64))}
+                placeholder="e.g. my-seed-42"
+                className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+              />
+            </label>
 
-        {/* Resources */}
-        <div>
-          <p className="mb-2 text-sm font-semibold text-stone-400">Starting Resources</p>
-          <div className="flex flex-col gap-2">
-            <NumberField label="Ore (Bricks)" value={config.ore} min={0} max={999} onChange={(v) => set('ore', v)} />
-            <NumberField label="Mana (Crystals)" value={config.mana} min={0} max={999} onChange={(v) => set('mana', v)} />
-            <NumberField label="Troops (Weapons)" value={config.troops} min={0} max={999} onChange={(v) => set('troops', v)} />
-          </div>
-        </div>
+            <hr className="border-stone-700" />
 
-        <hr className="border-stone-700" />
+            {/* Resources */}
+            <div>
+              <p className="mb-2 text-sm font-semibold text-stone-400">Starting Resources</p>
+              <div className="flex flex-col gap-2">
+                <NumberField label="Ore (Bricks)" value={config.ore} min={0} max={999} onChange={(v) => set('ore', v)} />
+                <NumberField label="Mana (Crystals)" value={config.mana} min={0} max={999} onChange={(v) => set('mana', v)} />
+                <NumberField label="Troops (Weapons)" value={config.troops} min={0} max={999} onChange={(v) => set('troops', v)} />
+              </div>
+            </div>
 
-        {/* Generator levels */}
-        <div>
-          <p className="mb-2 text-sm font-semibold text-stone-400">Starting Generator Levels</p>
-          <div className="flex flex-col gap-2">
-            <NumberField label="Quarry (Mine)" value={config.mineLevel} min={1} max={10} onChange={(v) => set('mineLevel', v)} />
-            <NumberField label="Magic (Monastery)" value={config.monasteryLevel} min={1} max={10} onChange={(v) => set('monasteryLevel', v)} />
-            <NumberField label="Dungeon (Barracks)" value={config.barracksLevel} min={1} max={10} onChange={(v) => set('barracksLevel', v)} />
-          </div>
-        </div>
+            <hr className="border-stone-700" />
 
-        <hr className="border-stone-700" />
+            {/* Generator levels */}
+            <div>
+              <p className="mb-2 text-sm font-semibold text-stone-400">Starting Generator Levels</p>
+              <div className="flex flex-col gap-2">
+                <NumberField label="Quarry (Mine)" value={config.mineLevel} min={1} max={10} onChange={(v) => set('mineLevel', v)} />
+                <NumberField label="Magic (Monastery)" value={config.monasteryLevel} min={1} max={10} onChange={(v) => set('monasteryLevel', v)} />
+                <NumberField label="Dungeon (Barracks)" value={config.barracksLevel} min={1} max={10} onChange={(v) => set('barracksLevel', v)} />
+              </div>
+            </div>
 
-        {/* Tower & wall */}
-        <div>
-          <p className="mb-2 text-sm font-semibold text-stone-400">Starting Structures</p>
-          <div className="flex flex-col gap-2">
-            <NumberField label="Tower Height" value={config.tower} min={1} max={200} onChange={(v) => set('tower', v)} />
-            <NumberField label="Wall Height" value={config.wall} min={0} max={200} onChange={(v) => set('wall', v)} />
-          </div>
-        </div>
+            <hr className="border-stone-700" />
+
+            {/* Tower & wall */}
+            <div>
+              <p className="mb-2 text-sm font-semibold text-stone-400">Starting Structures</p>
+              <div className="flex flex-col gap-2">
+                <NumberField label="Tower Height" value={config.tower} min={1} max={200} onChange={(v) => set('tower', v)} />
+                <NumberField label="Wall Height" value={config.wall} min={0} max={200} onChange={(v) => set('wall', v)} />
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="flex items-center justify-between pt-2">
           <button
