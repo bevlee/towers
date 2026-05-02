@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pocketbase-setup
+  namespace: towers
+  annotations:
+    # Delete this Job and re-apply to re-run (e.g. after schema changes).
+    description: "One-time PocketBase collection and auth setup"
+spec:
+  # Retry up to 4 times if the script fails (e.g. PocketBase not yet ready).
+  backoffLimit: 4
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      restartPolicy: OnFailure
+      containers:
+        - name: setup
+          image: python:3.12-alpine
+          command: ["python", "/scripts/setup.py"]
+          env:
+            - name: PB_URL
+              value: "http://pocketbase:8090"
+            - name: PB_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: email
+            - name: PB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-admin
+                  key: password
+          volumeMounts:
+            - name: setup-script
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: setup-script
+          configMap:
+            name: pocketbase-setup-script
+            defaultMode: 0755

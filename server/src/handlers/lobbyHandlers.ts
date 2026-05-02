@@ -20,6 +20,7 @@ const GameConfigSchema = z.object({
   tower: z.number().int().min(1).max(200),
   wall: z.number().int().min(0).max(200),
 })
+import { recordGameResult } from '../statsRecorder.js'
 
 const CreateRoomSchema = z.object({
   turnTimer: z.number().int().min(15).max(30),
@@ -64,6 +65,7 @@ export function registerLobbyHandlers(
       playerId,
       username,
       socketId: socket.id,
+      pbUserId: socket.data.pbUserId as string | undefined,
     }, gameConfig)
 
     socket.join(room.id)
@@ -102,6 +104,7 @@ export function registerLobbyHandlers(
         playerId,
         username,
         socketId: socket.id,
+        pbUserId: socket.data.pbUserId as string | undefined,
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join room'
@@ -245,6 +248,8 @@ function handlePlayerLeave(
         winReason: 'forfeit',
         finalState: getClientState(room.gameState, opponent.playerId),
       })
+
+      recordGameResult(room.gameState, pbUserIdsFromRoom(room))
     }
 
     turnManager.cleanup(roomId)
@@ -286,6 +291,7 @@ export function handleTurnTimeout(
 
     turnManager.cleanup(roomId)
     emitGameOverToBoth(io, room, winnerId, 'afk')
+    recordGameResult(room.gameState, pbUserIdsFromRoom(room))
     logger.info({ roomId, winnerId }, 'Game ended by AFK forfeit')
     return
   }
@@ -377,5 +383,12 @@ function getOpponent(room: Room, playerId: string) {
   if (room.player1?.playerId === playerId) return room.player2
   if (room.player2?.playerId === playerId) return room.player1
   return null
+}
+
+function pbUserIdsFromRoom(room: Room): Record<string, string> {
+  const ids: Record<string, string> = {}
+  if (room.player1?.pbUserId) ids[room.player1.playerId] = room.player1.pbUserId
+  if (room.player2?.pbUserId) ids[room.player2.playerId] = room.player2.pbUserId
+  return ids
 }
 

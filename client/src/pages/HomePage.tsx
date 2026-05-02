@@ -13,9 +13,10 @@ interface HomePageProps {
   currentRoom: RoomInfo | null
   error: string | null
   username: string
+  onLogout: () => void
 }
 
-export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, currentRoom, error, username }: HomePageProps) {
+export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, currentRoom, error, username, onLogout }: HomePageProps) {
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
@@ -30,7 +31,15 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
       <header className="w-full border-b border-stone-700 bg-stone-800 px-6 py-4">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <h1 className="text-2xl font-bold text-amber-400">Two Towers &mdash; Card Game</h1>
-          <span className="text-sm text-stone-400">Playing as <span className="text-amber-200">{username}</span></span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-stone-400">Playing as <span className="text-amber-200">{username}</span></span>
+            <button
+              onClick={onLogout}
+              className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 

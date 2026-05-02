@@ -5,6 +5,7 @@ interface PlayerSlot {
   playerId: string
   username: string
   socketId: string
+  pbUserId?: string
 }
 
 export interface Room {
