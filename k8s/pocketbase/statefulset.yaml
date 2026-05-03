@@ -28,7 +28,8 @@ spec:
           imagePullPolicy: Always
           workingDir: /pb
           command:
-            - /pocketbase
+            - /usr/local/bin/pocketbase
+            - --dir=/pb/pb_data
             - superuser
             - upsert
             - $(PB_ADMIN_EMAIL)
@@ -53,9 +54,12 @@ spec:
           image: ghcr.io/muchobien/pocketbase:latest
           imagePullPolicy: Always
           workingDir: /pb
+          command:
+            - /usr/local/bin/pocketbase
           args:
             - serve
             - --http=0.0.0.0:8090
+            - --dir=/pb/pb_data
           ports:
             - name: http
               containerPort: 8090

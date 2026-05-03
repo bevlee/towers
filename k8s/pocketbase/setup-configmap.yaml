@@ -65,19 +65,34 @@ data:
     TOKEN = result["token"]
     print("Authenticated as superuser", flush=True)
 
+    # ── Configure app settings (CORS / appUrl) ───────────────────────────────────
+
+    print("Configuring app settings...", flush=True)
+    result, status = api("/api/settings", "PATCH", {
+        "meta": {
+            "appName": "Towers",
+            "appUrl": "https://pbtowers.bevsoft.com",
+        }
+    }, TOKEN)
+    if status not in (200, 204):
+        print(f"ERROR: failed to update settings — {result}", file=sys.stderr)
+        sys.exit(1)
+    print("App settings configured", flush=True)
+
     # ── Configure users collection ────────────────────────────────────────────────
 
     print("Configuring users collection...", flush=True)
     users, _ = api("/api/collections/users", token=TOKEN)
 
-    # Enable username auth; disable email requirement and email verification.
+    # Enable username+email auth; require email; enforce username constraints.
     options = users.get("options", {})
     options.update({
         "allowEmailAuth":    True,
         "allowUsernameAuth": True,
-        "requireEmail":      False,
+        "requireEmail":      True,
         "onlyVerified":      False,
         "minPasswordLength": 8,
+        "minUsernameLength": 3,
     })
     users["options"] = options
 

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: docker.io/bevdev1/towers-client:v1.1
+          image: docker.io/bevdev1/towers-client:v1.2
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -33,7 +33,7 @@ spec:
             - name: GAMESERVER_HOST
               value: '127.0.0.1'
             - name: PB_URL
-              value: 'https://pb.bevsoft.com'
+              value: 'https://pbtowers.bevsoft.com'
           resources:
             requests:
               cpu: 50m
@@ -43,7 +43,7 @@ spec:
               memory: 128Mi
 
         - name: server
-          image: docker.io/bevdev1/towers-server:v1.1
+          image: docker.io/bevdev1/towers-server:v1.2
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

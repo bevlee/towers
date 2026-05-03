@@ -7,10 +7,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - pb.bevsoft.com
+        - pbtowers.bevsoft.com
       secretName: bevsoft-wildcard-tls
   rules:
-    - host: pb.bevsoft.com
+    - host: pbtowers.bevsoft.com
       http:
         paths:
           - path: /

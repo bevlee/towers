@@ -89,7 +89,7 @@ Build and push both images from the monorepo root:
 # client
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-client:v1.0 \
+  -t bevdev1/towers-client:v1.2 \
   -f client/Dockerfile \
   . \
   --push
@@ -97,7 +97,7 @@ docker buildx build \
 # server
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-server:v1.0 \
+  -t bevdev1/towers-server:v1.2 \
   -f server/Dockerfile \
   . \
   --push
