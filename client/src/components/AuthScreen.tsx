@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
 interface AuthScreenProps {
-  onLogin: (username: string, password: string) => Promise<void>
-  onRegister: (username: string, password: string) => Promise<void>
+  onLogin: (usernameOrEmail: string, password: string) => Promise<void>
+  onRegister: (username: string, email: string, password: string) => Promise<void>
   loading: boolean
   error: string | null
   onClearError: () => void
@@ -11,6 +11,7 @@ interface AuthScreenProps {
 export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }: AuthScreenProps) {
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
@@ -34,7 +35,7 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
     if (tab === 'login') {
       await onLogin(username.trim(), password)
     } else {
-      await onRegister(username.trim(), password)
+      await onRegister(username.trim(), email.trim(), password)
     }
   }
 
@@ -68,18 +69,34 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
 
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs uppercase tracking-wide text-stone-400">Username</span>
+            <span className="text-xs uppercase tracking-wide text-stone-400">
+              {tab === 'login' ? 'Username or Email' : 'Username'}
+            </span>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
-              placeholder="your_name"
+              placeholder={tab === 'login' ? 'your_name or you@example.com' : 'your_name'}
               autoFocus
-              maxLength={20}
+              maxLength={tab === 'login' ? undefined : 20}
               required
             />
           </label>
+
+          {tab === 'register' && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs uppercase tracking-wide text-stone-400">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+          )}
 
           <label className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-wide text-stone-400">Password</span>
