@@ -26,7 +26,7 @@ function AppRoutes() {
 
   const { user: pbUser, token: pbToken, loading: authLoading, error: authError, login, register, logout, clearError } = usePbAuth()
 
-  const username = (pbUser as any)?.username ?? ''
+  const username = (pbUser?.username as string | undefined) ?? ''
 
   const { connected } = useSocket(pbToken)
 

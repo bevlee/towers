@@ -66,7 +66,7 @@ export function chooseWorstCard(state: GameState, playerIndex: 0 | 1): string | 
 }
 
 /** Remove one instance of the named card from a player's hand onto the discard pile. */
-function discardFromHand(state: GameState, playerIndex: 0 | 1, cardName: string): GameState {
+export function discardFromHand(state: GameState, playerIndex: 0 | 1, cardName: string): GameState {
   const player = state.players[playerIndex]
   const cardIdx = player.hand.findIndex((c) => c.cardName === cardName)
   if (cardIdx === -1) return state

@@ -35,6 +35,11 @@ export const state = {
     blue: 'bg-blue-700',
     green: 'bg-green-700',
   } as const,
+  cardText: {
+    red: 'text-red-400',
+    blue: 'text-blue-400',
+    green: 'text-green-400',
+  } as const,
   // Resource row backgrounds (matches card colors semantically)
   resourceRow: {
     ore: 'bg-red-900/70',    // red = ore / barracks

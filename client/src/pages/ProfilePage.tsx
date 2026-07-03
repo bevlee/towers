@@ -1,18 +1,10 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useProfile } from '../hooks/useProfile'
 import type { MatchRow } from '../hooks/useProfile'
+import { WIN_REASON_LABEL } from '../utils/winReasons'
 
 interface ProfilePageProps {
   selfUsername: string | null
-}
-
-const WIN_REASON_LABEL: Record<string, string> = {
-  tower_destroyed: 'Tower destroyed',
-  tower_built:     'Tower built',
-  resources:       'Resources',
-  timeout:         'Timeout',
-  afk:             'AFK',
-  forfeit:         'Forfeit',
 }
 
 export function ProfilePage({ selfUsername }: ProfilePageProps) {
@@ -110,21 +102,21 @@ function MatchCard({ match, viewerId }: { match: MatchRow; viewerId: string }) {
   const opponent = isWin ? match.loser : match.winner
   const reasonLabel = WIN_REASON_LABEL[match.win_reason] ?? match.win_reason
 
+  // Anchors can't nest, so the whole-card match link is an absolutely
+  // positioned overlay and the opponent link sits above it (relative z-10).
   return (
-    <Link
-      to={`/match/${match.id}`}
-      className="flex items-center justify-between rounded-lg border border-stone-700 bg-stone-800 px-4 py-3 transition-colors hover:border-amber-600"
-    >
+    <div className="relative flex items-center justify-between rounded-lg border border-stone-700 bg-stone-800 px-4 py-3 transition-colors hover:border-amber-600">
+      <Link to={`/match/${match.id}`} className="absolute inset-0" aria-label="View match details" />
       <div className="flex items-center gap-3">
         <span className={`rounded px-2 py-0.5 text-xs font-bold ${isWin ? 'bg-emerald-700 text-emerald-100' : 'bg-red-900 text-red-100'}`}>
           {isWin ? 'WIN' : 'LOSS'}
         </span>
         <div>
           <div className="text-sm">
-            vs <Link
+            vs{' '}
+            <Link
               to={`/profile/${opponent.username}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-amber-300 hover:text-amber-200"
+              className="relative z-10 text-amber-300 hover:text-amber-200 hover:underline"
             >
               {opponent.username}
             </Link>
@@ -135,7 +127,7 @@ function MatchCard({ match, viewerId }: { match: MatchRow; viewerId: string }) {
         </div>
       </div>
       <span className="text-stone-500">→</span>
-    </Link>
+    </div>
   )
 }
 

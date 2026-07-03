@@ -15,8 +15,8 @@ const reasonLabels: Record<string, string> = {
 
 export function GameOverModal({ isWinner, winReason, onBackToLobby }: GameOverModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-12 py-8 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-8 py-8 shadow-2xl sm:px-12">
         <h2
           className={`text-4xl font-bold ${
             isWinner ? 'text-amber-400' : 'text-red-500'

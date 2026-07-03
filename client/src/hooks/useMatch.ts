@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
-
-const SERVER_URL = ''
+import { useFetchJson } from './useFetchJson'
 
 interface ExpandedUser {
   id: string
@@ -34,36 +32,10 @@ interface MatchData {
 }
 
 export function useMatch(matchId: string): MatchData {
-  const [match, setMatch] = useState<Match | null>(null)
-  const [plays, setPlays] = useState<Play[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch(`${SERVER_URL}/api/match/${encodeURIComponent(matchId)}`)
-        if (!res.ok) throw new Error(res.status === 404 ? 'Match not found' : 'Failed to load match')
-        const data = await res.json()
-        if (cancelled) return
-        const { plays: rawPlays, ...matchData } = data
-        setMatch(matchData)
-        setPlays(rawPlays)
-      } catch (err: any) {
-        if (cancelled) return
-        setError(err?.message ?? 'Failed to load match')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [matchId])
-
-  return { match, plays, loading, error }
+  const { data, loading, error } = useFetchJson<Match & { plays: Play[] }>(
+    `/api/match/${encodeURIComponent(matchId)}`,
+    'Match not found',
+    'Failed to load match',
+  )
+  return { match: data, plays: data?.plays ?? [], loading, error }
 }

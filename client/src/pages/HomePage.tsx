@@ -29,9 +29,11 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
   return (
     <div className="flex min-h-screen flex-col items-center bg-stone-900 text-amber-100">
       {/* Header */}
-      <header className="w-full border-b border-stone-700 bg-stone-800 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <h1 className="text-2xl font-bold text-amber-400">Two Towers &mdash; Card Game</h1>
+      <header className="w-full border-b border-stone-700 bg-stone-800 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h1 className="text-xl font-bold text-amber-400 sm:text-2xl">
+            Two Towers<span className="hidden sm:inline"> &mdash; Card Game</span>
+          </h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-stone-400">Playing as <span className="text-amber-200">{username}</span></span>
             <Link
@@ -50,7 +52,7 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-8">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
         {/* Error banner */}
         {error && (
           <div className="mb-4 rounded border border-red-700 bg-red-900/30 px-4 py-2 text-red-300">
@@ -60,7 +62,7 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
 
         {/* Waiting for opponent */}
         {currentRoom && (
-          <div className="mb-6 flex items-center justify-between rounded border border-amber-700 bg-amber-900/20 px-4 py-3 text-amber-200">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded border border-amber-700 bg-amber-900/20 px-4 py-3 text-amber-200">
             <span>Waiting for opponent in room &ldquo;{currentRoom.name}&rdquo;...</span>
             <button
               className="rounded bg-red-700 px-3 py-1 text-sm font-bold text-white hover:bg-red-600"

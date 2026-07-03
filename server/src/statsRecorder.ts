@@ -47,25 +47,17 @@ async function _persist(
       turn_count: state.turnNumber,
     })
 
-    // 2. Update win/loss counters in parallel
-    const [winnerRecord, loserRecord] = await Promise.all([
-      pb.collection('users').getOne(winnerId),
-      pb.collection('users').getOne(loserId),
-    ])
-
-    const winPatch: Record<string, number> = {
-      wins: ((winnerRecord['wins'] as number) ?? 0) + 1,
-    }
+    // 2. Bump win/loss counters with PocketBase's atomic "+" field modifiers —
+    // no read-modify-write, so concurrent game finishes can't drop an increment.
+    const winPatch: Record<string, number> = { 'wins+': 1 }
     const typeField = state.winReason ? WIN_TYPE_FIELD[state.winReason] : undefined
     if (typeField) {
-      winPatch[typeField] = ((winnerRecord[typeField] as number) ?? 0) + 1
+      winPatch[`${typeField}+`] = 1
     }
 
     await Promise.all([
       pb.collection('users').update(winnerId, winPatch),
-      pb.collection('users').update(loserId, {
-        losses: ((loserRecord['losses'] as number) ?? 0) + 1,
-      }),
+      pb.collection('users').update(loserId, { 'losses+': 1 }),
     ])
 
     // 3. Record every card play, discard, and timeout_discard from history.

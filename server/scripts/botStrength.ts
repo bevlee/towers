@@ -2,7 +2,7 @@
  * Pit the hard bot against the easy (greedy) bot and report the win rate.
  * Not part of CI — run manually when tuning either bot:
  *
- *   cd server && npx tsx scripts/botStrength.ts [games] [budgetMs]
+ *   cd server && npx tsx scripts/botStrength.ts [games]
  */
 import { createGame, defaultGameConfig } from '../src/gameState.js'
 import { applyAction, legalActions } from '../src/bot/simulate.js'
@@ -10,7 +10,6 @@ import { chooseGreedyAction } from '../src/bot/greedy.js'
 import { chooseHardAction } from '../src/bot/hardSearch.js'
 
 const GAMES = Number(process.argv[2] ?? 16)
-const BUDGET_MS = Number(process.argv[3] ?? 1000)
 const MAX_PLIES = 600
 
 async function playGame(hardIndex: 0 | 1): Promise<string> {
@@ -36,7 +35,7 @@ async function playGame(hardIndex: 0 | 1): Promise<string> {
     const idx = state.currentPlayerIndex
     const action =
       idx === hardIndex
-        ? await chooseHardAction(state, idx, { budgetMs: BUDGET_MS })
+        ? await chooseHardAction(state, idx)
         : chooseGreedyAction(state, idx)
     if (!action) {
       const acts = legalActions(state, idx)

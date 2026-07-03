@@ -4,11 +4,8 @@ import { GAME_EVENTS, LOBBY_EVENTS, CARD_MAP } from '@towers/shared'
 import type { GameState, PlayerState, CardInstance } from '@towers/shared'
 import type { RoomManager, Room } from '../roomManager.js'
 import type { TurnManager } from '../turnManager.js'
-import { handleTurnTimeout } from './lobbyHandlers.js'
 import { logger } from '../logger.js'
-import { emitGameOverToBoth, emitGameStateToBoth } from './emit.js'
-import { checkWin } from '../winChecker.js'
-import { maybeScheduleBotTurn } from '../bot/botRunner.js'
+import { continueTurn, endGame, finishTurn, handleTurnTimeout } from './turnFlow.js'
 
 const PlayCardSchema = z.object({
   cardInstanceId: z.string().min(1),
@@ -93,8 +90,7 @@ export function registerGameHandlers(
       room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'play', cardInstance.cardName)
 
       if (result.winResult) {
-        turnManager.cleanup(roomId)
-        emitGameOverToBoth(io, room, result.winResult.winner, result.winResult.reason)
+        endGame(io, room, turnManager, result.winResult.winner, result.winResult.reason)
         return
       }
 
@@ -113,30 +109,11 @@ export function registerGameHandlers(
       }
 
       if (result.playAgain) {
-        room.gameState = turnManager.resetTurnTimer(room.gameState)
-        emitGameStateToBoth(io, room)
-        turnManager.startTurn(roomId, room.gameState, () => {
-          handleTurnTimeout(io, roomId, roomManager, turnManager)
-        })
+        continueTurn(io, room, roomManager, turnManager)
         return
       }
 
-      room.gameState = turnManager.generateResources(room.gameState)
-
-      const genWin = checkWin(room.gameState)
-      if (genWin) {
-        room.gameState = { ...room.gameState, phase: 'finished', winner: genWin.winner, winReason: genWin.reason }
-        turnManager.cleanup(roomId)
-        emitGameOverToBoth(io, room, genWin.winner, genWin.reason)
-        return
-      }
-
-      room.gameState = turnManager.resetTurnTimer(room.gameState)
-      emitGameStateToBoth(io, room)
-      turnManager.startTurn(roomId, room.gameState, () => {
-        handleTurnTimeout(io, roomId, roomManager, turnManager)
-      })
-      maybeScheduleBotTurn(io, roomId, roomManager, turnManager)
+      finishTurn(io, room, roomManager, turnManager)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to play card'
       logger.error({ roomId, playerId: currentPlayer.playerId, cardInstanceId, err }, 'Error playing card')
@@ -173,25 +150,10 @@ export function registerGameHandlers(
     try {
       const resetState = turnManager.resetTimeouts(state)
       const result = turnManager.handleDiscard(resetState, cardInstanceId)
-      room.gameState = turnManager.generateResources(result.state)
+      room.gameState = { ...result.state, lastPlayedCard: undefined }
       room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'discard', cardInstance.cardName)
 
-      const genWin = checkWin(room.gameState)
-      if (genWin) {
-        room.gameState = { ...room.gameState, phase: 'finished', winner: genWin.winner, winReason: genWin.reason, lastPlayedCard: undefined }
-        turnManager.cleanup(roomId)
-        emitGameOverToBoth(io, room, genWin.winner, genWin.reason)
-        return
-      }
-
-      room.gameState = turnManager.resetTurnTimer({ ...room.gameState, lastPlayedCard: undefined })
-
-      emitGameStateToBoth(io, room)
-
-      turnManager.startTurn(roomId, room.gameState, () => {
-        handleTurnTimeout(io, roomId, roomManager, turnManager)
-      })
-      maybeScheduleBotTurn(io, roomId, roomManager, turnManager)
+      finishTurn(io, room, roomManager, turnManager)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to discard card'
       logger.error({ roomId, playerId: currentPlayer.playerId, cardInstanceId, err }, 'Error discarding card')
@@ -232,13 +194,8 @@ export function registerGameHandlers(
 
     room.gameState = { ...resetState, players, discardPile: [...resetState.discardPile, discardedCard], awaitingDrawDiscard: false }
     room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
-    room.gameState = turnManager.resetTurnTimer(room.gameState)
     room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'discard', discardedCard.cardName)
 
-    emitGameStateToBoth(io, room)
-
-    turnManager.startTurn(roomId, room.gameState, () => {
-      handleTurnTimeout(io, roomId, roomManager, turnManager)
-    })
+    continueTurn(io, room, roomManager, turnManager)
   })
 }

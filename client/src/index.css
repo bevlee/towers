@@ -5,6 +5,14 @@
   --animate-card-play: card-play 0.35s ease-out;
 }
 
+@layer base {
+  /* Visible keyboard focus on interactive elements (mouse/touch unaffected) */
+  :focus-visible {
+    outline: 2px solid var(--color-amber-500);
+    outline-offset: 2px;
+  }
+}
+
 @keyframes card-draw {
   0% {
     opacity: 0;
