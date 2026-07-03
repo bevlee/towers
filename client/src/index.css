@@ -31,20 +31,20 @@
 
 @keyframes tower-shake {
   0%, 100% { transform: translateX(0); }
-  5% { transform: translateX(-4px); }
-  10% { transform: translateX(4px); }
-  15% { transform: translateX(-3px); }
-  20% { transform: translateX(3px); }
-  30% { transform: translateX(-2px); }
-  40% { transform: translateX(2px); }
-  55% { transform: translateX(-1px); }
-  70% { transform: translateX(1px); }
+  5% { transform: translateX(calc(var(--shake-amp, 4px) * -1)); }
+  10% { transform: translateX(var(--shake-amp, 4px)); }
+  15% { transform: translateX(calc(var(--shake-amp, 4px) * -0.75)); }
+  20% { transform: translateX(calc(var(--shake-amp, 4px) * 0.75)); }
+  30% { transform: translateX(calc(var(--shake-amp, 4px) * -0.5)); }
+  40% { transform: translateX(calc(var(--shake-amp, 4px) * 0.5)); }
+  55% { transform: translateX(calc(var(--shake-amp, 4px) * -0.25)); }
+  70% { transform: translateX(calc(var(--shake-amp, 4px) * 0.25)); }
 }
 
 @keyframes tower-glow-green-kf {
   0% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
-  15% { filter: brightness(1.5) drop-shadow(0 0 12px rgba(74, 222, 128, 0.7)); }
-  40% { filter: brightness(1.3) drop-shadow(0 0 8px rgba(74, 222, 128, 0.4)); }
+  15% { filter: brightness(1.5) drop-shadow(0 0 var(--glow-size, 12px) rgba(74, 222, 128, 0.7)); }
+  40% { filter: brightness(1.3) drop-shadow(0 0 calc(var(--glow-size, 12px) * 0.66) rgba(74, 222, 128, 0.4)); }
   100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
 }
 
@@ -72,7 +72,7 @@
 }
 
 .tower-shake {
-  animation: tower-shake 1.2s ease-out;
+  animation: tower-shake var(--shake-dur, 1.2s) ease-out;
 }
 
 .tower-glow-green {
@@ -81,6 +81,34 @@
 
 .tower-flash-red {
   animation: tower-flash-red-kf 1.5s ease-out;
+}
+
+/* Both classes set `animation`, so the combined case needs an explicit two-animation rule */
+.tower-shake.tower-flash-red {
+  animation:
+    tower-shake var(--shake-dur, 1.2s) ease-out,
+    tower-flash-red-kf 1.5s ease-out;
+}
+
+@keyframes near-win-pulse-kf {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.25)); }
+  50% { filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6)) brightness(1.12); }
+}
+
+.tower-near-win {
+  animation: near-win-pulse-kf 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tower-shake,
+  .tower-flash-red,
+  .tower-shake.tower-flash-red,
+  .tower-glow-green,
+  .tower-near-win,
+  .number-pop,
+  .delta-float {
+    animation: none;
+  }
 }
 
 .number-pop {
