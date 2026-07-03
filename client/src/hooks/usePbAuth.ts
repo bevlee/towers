@@ -3,24 +3,32 @@ import { pb } from '../pb'
 
 type RecordModel = Record<string, unknown> & { id: string }
 
+export type FieldErrors = Partial<Record<'username' | 'email' | 'password' | 'passwordConfirm', string>>
+
+export interface AuthError {
+  message: string | null
+  fields: FieldErrors
+}
+
 interface PbAuthState {
   user: RecordModel | null
   token: string | null
   loading: boolean
-  error: string | null
+  error: AuthError
   login: (usernameOrEmail: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => void
   clearError: () => void
 }
 
+const NO_ERROR: AuthError = { message: null, fields: {} }
+
 export function usePbAuth(): PbAuthState {
   const [user, setUser]   = useState<RecordModel | null>(pb.authStore.isValid ? (pb.authStore.model as RecordModel) : null)
   const [token, setToken] = useState<string | null>(pb.authStore.isValid ? pb.authStore.token : null)
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError]     = useState<AuthError>(NO_ERROR)
 
-  // Keep state in sync if authStore changes externally (e.g. token expiry).
   useEffect(() => {
     return pb.authStore.onChange((newToken: string, model: unknown) => {
       setUser(model as RecordModel | null)
@@ -30,13 +38,13 @@ export function usePbAuth(): PbAuthState {
 
   const login = useCallback(async (username: string, password: string) => {
     setLoading(true)
-    setError(null)
+    setError(NO_ERROR)
     try {
       const auth = await pb.collection('users').authWithPassword(username, password)
       setUser(auth.record as RecordModel)
       setToken(auth.token)
     } catch (err) {
-      setError(extractMessage(err))
+      setError(extractError(err))
     } finally {
       setLoading(false)
     }
@@ -44,14 +52,20 @@ export function usePbAuth(): PbAuthState {
 
   const register = useCallback(async (username: string, email: string, password: string) => {
     setLoading(true)
-    setError(null)
+    setError(NO_ERROR)
     try {
       await pb.collection('users').create({ username, email, password, passwordConfirm: password })
+    } catch (err) {
+      setError(extractError(err))
+      setLoading(false)
+      return
+    }
+    try {
       const auth = await pb.collection('users').authWithPassword(username, password)
       setUser(auth.record as RecordModel)
       setToken(auth.token)
-    } catch (err) {
-      setError(extractMessage(err))
+    } catch {
+      setError({ message: 'Account created. Please sign in.', fields: {} })
     } finally {
       setLoading(false)
     }
@@ -63,30 +77,44 @@ export function usePbAuth(): PbAuthState {
     setToken(null)
   }, [])
 
-  const clearError = useCallback(() => setError(null), [])
+  const clearError = useCallback(() => setError(NO_ERROR), [])
 
   return { user, token, loading, error, login, register, logout, clearError }
 }
 
-function extractMessage(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const e = err as { data?: { message?: string; data?: Record<string, { code?: string; message: string }> }; message?: string }
-    const fields = e.data?.data
-
-    if (fields) {
-      if (fields.username?.code === 'validation_not_unique') return 'Username is already taken.'
-      if (fields.username?.code === 'validation_length_out_of_range') return 'Username must be at least 3 characters.'
-      if (fields.email?.code === 'validation_not_unique') return 'Email is already registered.'
-      if (fields.email?.code === 'validation_required') return 'Email is required.'
-      if (fields.email?.code === 'validation_is_email') return 'Please enter a valid email address.'
-      if (fields.password?.code === 'validation_length_out_of_range') return 'Password must be at least 8 characters.'
-      if (fields.passwordConfirm?.code === 'validation_values_mismatch') return 'Passwords do not match.'
-      const first = Object.values(fields).find((f) => f.message)
-      if (first) return first.message
-    }
-
-    if (e.data?.message) return e.data.message
-    if (e.message) return e.message
+function fieldMessage(field: string, code: string | undefined, fallback: string): string {
+  switch (code) {
+    case 'validation_not_unique':
+      return field === 'username' ? 'Username is already taken.' : 'Email is already registered.'
+    case 'validation_length_out_of_range':
+      return field === 'username' ? 'Must be 3–20 characters.' : 'Must be at least 8 characters.'
+    case 'validation_required':
+      return 'This field is required.'
+    case 'validation_is_email':
+      return 'Please enter a valid email address.'
+    case 'validation_values_mismatch':
+      return 'Passwords do not match.'
+    default:
+      return fallback
   }
-  return 'An unexpected error occurred'
+}
+
+function extractError(err: unknown): AuthError {
+  if (err && typeof err === 'object') {
+    const e = err as {
+      data?: { message?: string; data?: Record<string, { code?: string; message: string }> }
+      message?: string
+    }
+    const raw = e.data?.data ?? {}
+    const fields: FieldErrors = {}
+    for (const key of ['username', 'email', 'password', 'passwordConfirm'] as const) {
+      const f = raw[key]
+      if (f) fields[key] = fieldMessage(key, f.code, f.message)
+    }
+    const message = Object.keys(fields).length > 0
+      ? null
+      : e.data?.message ?? e.message ?? 'An unexpected error occurred'
+    return { message, fields }
+  }
+  return { message: 'An unexpected error occurred', fields: {} }
 }

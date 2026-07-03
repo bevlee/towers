@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: docker.io/bevdev1/towers-client:v1.2
+          image: docker.io/bevdev1/towers-client:v1.4
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -43,7 +43,7 @@ spec:
               memory: 128Mi
 
         - name: server
-          image: docker.io/bevdev1/towers-server:v1.2
+          image: docker.io/bevdev1/towers-server:v1.4
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

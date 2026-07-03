@@ -68,20 +68,26 @@ async function _persist(
       }),
     ])
 
-    // 3. Record every card play, discard, and timeout_discard from history
+    // 3. Record every card play, discard, and timeout_discard from history.
+    // sequence = position within (turn_number, player) — used to render plays in order.
+    const seqCounters: Record<string, number> = {}
     await Promise.all(
       state.history
         .filter((entry) => pbUserIds[entry.playerId])
-        .map((entry) =>
-          pb.collection('card_plays').create({
+        .map((entry) => {
+          const key = `${entry.turn}:${entry.playerId}`
+          const sequence = seqCounters[key] ?? 0
+          seqCounters[key] = sequence + 1
+          return pb.collection('card_plays').create({
             game:        game.id,
             player:      pbUserIds[entry.playerId],
             card_name:   entry.cardName,
             card_color:  CARD_MAP[entry.cardName]?.color ?? 'red',
             action:      entry.action,
             turn_number: entry.turn,
-          }),
-        ),
+            sequence,
+          })
+        }),
     )
 
     logger.info({ gameId: game.id, winReason: state.winReason }, 'Game stats recorded')

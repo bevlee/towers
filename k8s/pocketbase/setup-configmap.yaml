@@ -84,36 +84,40 @@ data:
     print("Configuring users collection...", flush=True)
     users, _ = api("/api/collections/users", token=TOKEN)
 
-    # Enable username+email auth; require email; enforce username constraints.
-    options = users.get("options", {})
-    options.update({
-        "allowEmailAuth":    True,
-        "allowUsernameAuth": True,
-        "requireEmail":      True,
-        "onlyVerified":      False,
-        "minPasswordLength": 8,
-        "minUsernameLength": 3,
-    })
-    users["options"] = options
+    # PocketBase v0.23+ controls password auth identity via passwordAuth.identityFields,
+    # not the old options.allowUsernameAuth / allowEmailAuth keys.
+    password_auth = users.get("passwordAuth") or {}
+    password_auth["enabled"] = True
+    password_auth["identityFields"] = ["email", "username"]
+    users["passwordAuth"] = password_auth
 
-    # Support both PocketBase v0.21 ("schema") and v0.22+ ("fields") layouts.
     schema_key = "fields" if "fields" in users else "schema"
     existing   = {f["name"] for f in users.get(schema_key, [])}
 
     for field in [
+        {"name": "username",            "type": "text",   "required": True,
+         "min": 3, "max": 20},
         {"name": "wins",                "type": "number", "required": False,
-         "options": {"min": 0, "max": None, "noDecimal": True}},
+         "onlyInt": True},
         {"name": "losses",              "type": "number", "required": False,
-         "options": {"min": 0, "max": None, "noDecimal": True}},
+         "onlyInt": True},
         {"name": "win_tower_built",     "type": "number", "required": False,
-         "options": {"min": 0, "max": None, "noDecimal": True}},
+         "onlyInt": True},
         {"name": "win_tower_destroyed", "type": "number", "required": False,
-         "options": {"min": 0, "max": None, "noDecimal": True}},
+         "onlyInt": True},
         {"name": "win_resources",       "type": "number", "required": False,
-         "options": {"min": 0, "max": None, "noDecimal": True}},
+         "onlyInt": True},
     ]:
         if field["name"] not in existing:
             users.setdefault(schema_key, []).append(field)
+
+    # Ensure a unique index on username (PocketBase enforces uniqueness via indexes,
+    # not field options). Idempotent: skip if an index with this name exists.
+    indexes = users.get("indexes", []) or []
+    USERNAME_INDEX = "CREATE UNIQUE INDEX `idx_users_username` ON `users` (`username`)"
+    if not any("idx_users_username" in idx for idx in indexes):
+        indexes.append(USERNAME_INDEX)
+    users["indexes"] = indexes
 
     result, status = api(f"/api/collections/{users['id']}", "PATCH", users, TOKEN)
     if status not in (200, 204):
@@ -134,6 +138,27 @@ data:
     # Use the correct field key for new collections too.
     USERS_ID = get_collection_id("users")
 
+    # PocketBase v0.23+ does NOT auto-add created/updated to collections created
+    # via the API (only the admin UI does), and the server sorts by `-created`.
+    AUTODATE_FIELDS = [
+        {"name": "created", "type": "autodate", "onCreate": True, "onUpdate": False},
+        {"name": "updated", "type": "autodate", "onCreate": True, "onUpdate": True},
+    ]
+
+    def ensure_fields(name, fields):
+        coll, _ = api(f"/api/collections/{name}", token=TOKEN)
+        key = "fields" if "fields" in coll else "schema"
+        existing = {f["name"] for f in coll.get(key, [])}
+        missing = [f for f in fields if f["name"] not in existing]
+        if not missing:
+            return
+        coll[key] = coll.get(key, []) + missing
+        result, status = api(f"/api/collections/{coll['id']}", "PATCH", coll, TOKEN)
+        if status not in (200, 204):
+            print(f"ERROR: failed to add fields to {name} — {result}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Added fields to {name}: {[f['name'] for f in missing]}", flush=True)
+
     def create_collection(payload):
         result, status = api("/api/collections", "POST", payload, TOKEN)
         if status in (200, 201):
@@ -150,30 +175,21 @@ data:
         create_collection({
             "name": "game_results",
             "type": "base",
-            schema_key: [
-                {
-                    "name": "winner", "type": "relation", "required": True,
-                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
-                                "minSelect": None, "maxSelect": 1, "displayFields": None},
-                },
-                {
-                    "name": "loser", "type": "relation", "required": True,
-                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
-                                "minSelect": None, "maxSelect": 1, "displayFields": None},
-                },
-                {
-                    "name": "win_reason", "type": "select", "required": False,
-                    "options": {"maxSelect": 1, "values": [
-                        "tower_destroyed", "tower_built", "resources",
-                        "timeout", "afk", "forfeit",
-                    ]},
-                },
-                {
-                    "name": "turn_count", "type": "number", "required": False,
-                    "options": {"min": None, "max": None, "noDecimal": True},
-                },
-            ],
+            "fields": [
+                {"name": "winner",     "type": "relation", "required": True,
+                 "collectionId": USERS_ID, "cascadeDelete": False, "maxSelect": 1},
+                {"name": "loser",      "type": "relation", "required": True,
+                 "collectionId": USERS_ID, "cascadeDelete": False, "maxSelect": 1},
+                {"name": "win_reason", "type": "select",   "required": False,
+                 "maxSelect": 1, "values": [
+                     "tower_destroyed", "tower_built", "resources",
+                     "timeout", "afk", "forfeit",
+                 ]},
+                {"name": "turn_count", "type": "number",   "required": False,
+                 "onlyInt": True},
+            ] + AUTODATE_FIELDS,
         })
+    ensure_fields("game_results", AUTODATE_FIELDS)
 
     # ── card_plays collection ─────────────────────────────────────────────────────
 
@@ -184,36 +200,61 @@ data:
         create_collection({
             "name": "card_plays",
             "type": "base",
-            schema_key: [
-                {
-                    "name": "game", "type": "relation", "required": True,
-                    "options": {"collectionId": GAME_RESULTS_ID, "cascadeDelete": True,
-                                "minSelect": None, "maxSelect": 1, "displayFields": None},
-                },
-                {
-                    "name": "player", "type": "relation", "required": True,
-                    "options": {"collectionId": USERS_ID, "cascadeDelete": False,
-                                "minSelect": None, "maxSelect": 1, "displayFields": None},
-                },
-                {
-                    "name": "card_name", "type": "text", "required": True,
-                    "options": {"min": None, "max": 64, "pattern": ""},
-                },
-                {
-                    "name": "card_color", "type": "select", "required": False,
-                    "options": {"maxSelect": 1, "values": ["red", "blue", "green"]},
-                },
-                {
-                    "name": "action", "type": "select", "required": True,
-                    "options": {"maxSelect": 1, "values": [
-                        "play", "discard", "timeout_discard",
-                    ]},
-                },
-                {
-                    "name": "turn_number", "type": "number", "required": False,
-                    "options": {"min": None, "max": None, "noDecimal": True},
-                },
-            ],
+            "fields": [
+                {"name": "game",        "type": "relation", "required": True,
+                 "collectionId": GAME_RESULTS_ID, "cascadeDelete": True, "maxSelect": 1},
+                {"name": "player",      "type": "relation", "required": True,
+                 "collectionId": USERS_ID, "cascadeDelete": False, "maxSelect": 1},
+                {"name": "card_name",   "type": "text",     "required": True,
+                 "max": 64},
+                {"name": "card_color",  "type": "select",   "required": False,
+                 "maxSelect": 1, "values": ["red", "blue", "green"]},
+                {"name": "action",      "type": "select",   "required": True,
+                 "maxSelect": 1, "values": ["play", "discard", "timeout_discard"]},
+                {"name": "turn_number", "type": "number",   "required": False,
+                 "onlyInt": True},
+                {"name": "sequence",    "type": "number",   "required": False,
+                 "onlyInt": True},
+            ] + AUTODATE_FIELDS,
         })
+    ensure_fields("card_plays", AUTODATE_FIELDS)
+
+    # ── API access rules ──────────────────────────────────────────────────────────
+    # Stats are public-read, superuser-write only. Users can register but cannot
+    # update their own records (prevents stat tampering).
+
+    print("Setting API rules...", flush=True)
+
+    rules_by_collection = {
+        "users": {
+            "listRule":   "",
+            "viewRule":   "",
+            "createRule": "",
+            "updateRule": None,
+            "deleteRule": None,
+        },
+        "game_results": {
+            "listRule":   "",
+            "viewRule":   "",
+            "createRule": None,
+            "updateRule": None,
+            "deleteRule": None,
+        },
+        "card_plays": {
+            "listRule":   "",
+            "viewRule":   "",
+            "createRule": None,
+            "updateRule": None,
+            "deleteRule": None,
+        },
+    }
+
+    for coll_name, rules in rules_by_collection.items():
+        coll_id = get_collection_id(coll_name)
+        result, status = api(f"/api/collections/{coll_id}", "PATCH", rules, TOKEN)
+        if status not in (200, 204):
+            print(f"ERROR: failed to set rules on {coll_name} — {result}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Rules set: {coll_name}", flush=True)
 
     print("Setup complete!", flush=True)

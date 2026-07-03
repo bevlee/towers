@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import type { AuthError, FieldErrors } from '../hooks/usePbAuth'
 
 interface AuthScreenProps {
   onLogin: (usernameOrEmail: string, password: string) => Promise<void>
   onRegister: (username: string, email: string, password: string) => Promise<void>
   loading: boolean
-  error: string | null
+  error: AuthError
   onClearError: () => void
 }
 
@@ -14,21 +15,21 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [localError, setLocalError] = useState<string | null>(null)
+  const [localFields, setLocalFields] = useState<FieldErrors>({})
 
   function switchTab(next: 'login' | 'register') {
     setTab(next)
-    setLocalError(null)
+    setLocalFields({})
     onClearError()
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLocalError(null)
+    setLocalFields({})
     onClearError()
 
     if (tab === 'register' && password !== confirmPassword) {
-      setLocalError('Passwords do not match')
+      setLocalFields({ passwordConfirm: 'Passwords do not match.' })
       return
     }
 
@@ -39,7 +40,11 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
     }
   }
 
-  const displayError = localError ?? error
+  const fieldErrors: FieldErrors = { ...error.fields, ...localFields }
+  const topError = error.message
+  const inputBase = 'rounded border px-3 py-2 text-amber-100 placeholder-stone-500 outline-none bg-stone-700'
+  const inputOk = 'border-stone-600 focus:border-amber-500'
+  const inputErr = 'border-red-700 focus:border-red-500'
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-stone-900">
@@ -76,12 +81,13 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+              className={`${inputBase} ${fieldErrors.username ? inputErr : inputOk}`}
               placeholder={tab === 'login' ? 'your_name or you@example.com' : 'your_name'}
               autoFocus
               maxLength={tab === 'login' ? undefined : 20}
               required
             />
+            {fieldErrors.username && <span className="text-xs text-red-400">{fieldErrors.username}</span>}
           </label>
 
           {tab === 'register' && (
@@ -91,10 +97,11 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+                className={`${inputBase} ${fieldErrors.email ? inputErr : inputOk}`}
                 placeholder="you@example.com"
                 required
               />
+              {fieldErrors.email && <span className="text-xs text-red-400">{fieldErrors.email}</span>}
             </label>
           )}
 
@@ -104,11 +111,12 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+              className={`${inputBase} ${fieldErrors.password ? inputErr : inputOk}`}
               placeholder="••••••••"
               required
               minLength={8}
             />
+            {fieldErrors.password && <span className="text-xs text-red-400">{fieldErrors.password}</span>}
           </label>
 
           {tab === 'register' && (
@@ -118,16 +126,17 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 placeholder-stone-500 outline-none focus:border-amber-500"
+                className={`${inputBase} ${fieldErrors.passwordConfirm ? inputErr : inputOk}`}
                 placeholder="••••••••"
                 required
               />
+              {fieldErrors.passwordConfirm && <span className="text-xs text-red-400">{fieldErrors.passwordConfirm}</span>}
             </label>
           )}
 
-          {displayError && (
+          {topError && (
             <p className="rounded border border-red-800/50 bg-red-950/30 px-3 py-2 text-sm text-red-400">
-              {displayError}
+              {topError}
             </p>
           )}
 
