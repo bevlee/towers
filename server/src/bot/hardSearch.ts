@@ -4,11 +4,6 @@ import { applyAction, legalActions } from './simulate.js'
 import type { BotAction } from './simulate.js'
 import { chooseGreedyAction } from './greedy.js'
 
-export interface HardSearchOptions {
-  /** Accepted for API stability; the forced-win search is effectively instant. */
-  budgetMs?: number
-}
-
 /**
  * Depth-first search for a guaranteed win this turn using only cards already
  * in hand: either a single winning play, or a chain of play-again cards
@@ -81,7 +76,6 @@ function searchChain(state: GameState, botIndex: 0 | 1): BotAction | null {
 export async function chooseHardAction(
   state: GameState,
   botIndex: 0 | 1,
-  _options: HardSearchOptions = {},
 ): Promise<BotAction | null> {
   const forcedWin = findForcedWin(state, botIndex)
   if (forcedWin) return forcedWin

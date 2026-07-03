@@ -24,7 +24,7 @@ describe('chooseHardAction', () => {
       ],
     })
 
-    const action = await chooseHardAction(state, 0, { budgetMs: 150 })
+    const action = await chooseHardAction(state, 0)
     expect(action).not.toBeNull()
     const handNames = hand.map((c) => c.cardName)
     expect(handNames).toContain(action!.cardName)
@@ -47,7 +47,7 @@ describe('chooseHardAction', () => {
       ],
     })
 
-    const action = await chooseHardAction(state, 0, { budgetMs: 300 })
+    const action = await chooseHardAction(state, 0)
     expect(action).toEqual({ type: 'play', cardName: 'Gemstone Flaw' })
   })
 
@@ -69,7 +69,7 @@ describe('chooseHardAction', () => {
       ],
     })
 
-    const action = await chooseHardAction(state, 0, { budgetMs: 500 })
+    const action = await chooseHardAction(state, 0)
     expect(action).toEqual({ type: 'play', cardName: 'Quartz' })
   })
 
@@ -84,11 +84,11 @@ describe('chooseHardAction', () => {
       ],
     })
 
-    const action = await chooseHardAction(state, 0, { budgetMs: 200 })
+    const action = await chooseHardAction(state, 0)
     expect(action).not.toBeNull()
   })
 
-  it('respects the time budget', async () => {
+  it('completes quickly', async () => {
     const state = makeState({
       deck: fillerDeck(20),
       players: [
@@ -98,7 +98,7 @@ describe('chooseHardAction', () => {
     })
 
     const start = Date.now()
-    await chooseHardAction(state, 0, { budgetMs: 200 })
+    await chooseHardAction(state, 0)
     expect(Date.now() - start).toBeLessThan(1500)
   })
 
@@ -110,6 +110,6 @@ describe('chooseHardAction', () => {
       ],
     })
 
-    expect(await chooseHardAction(state, 0, { budgetMs: 100 })).toBeNull()
+    expect(await chooseHardAction(state, 0)).toBeNull()
   })
 })

@@ -2,13 +2,11 @@ import crypto from 'node:crypto'
 import type { Server } from 'socket.io'
 import type { RoomManager } from '../roomManager.js'
 import type { TurnManager } from '../turnManager.js'
-import { handleTurnTimeout } from '../handlers/lobbyHandlers.js'
-import { emitGameOverToBoth, emitGameStateToBoth } from '../handlers/emit.js'
-import { checkWin } from '../winChecker.js'
+import { continueTurn, endGame, finishTurn, handleTurnTimeout } from '../handlers/turnFlow.js'
 import { logger } from '../logger.js'
 import { chooseGreedyAction } from './greedy.js'
 import { chooseHardAction } from './hardSearch.js'
-import { chooseWorstCard } from './simulate.js'
+import { chooseWorstCard, discardFromHand } from './simulate.js'
 import type { BotAction } from './simulate.js'
 
 export type BotDifficulty = 'easy' | 'hard'
@@ -20,8 +18,6 @@ export const BOT_SOCKET_ID = 'bot'
 const BOT_THINK_DELAY_MS = 1200
 /** Shorter pause between chained play-again moves. */
 const BOT_CHAIN_DELAY_MS = 700
-/** Time budget for the hard bot's search. */
-const HARD_SEARCH_BUDGET_MS = 1000
 
 const BOT_ID_PREFIX = 'bot:'
 
@@ -124,7 +120,7 @@ async function chooseBotAction(
   playerIndex: 0 | 1,
 ): Promise<BotAction | null> {
   if (difficulty === 'hard') {
-    return chooseHardAction(state, playerIndex, { budgetMs: HARD_SEARCH_BUDGET_MS })
+    return chooseHardAction(state, playerIndex)
   }
   return chooseGreedyAction(state, playerIndex)
 }
@@ -138,7 +134,6 @@ function applyBotPlay(
   cardName: string,
   options: RunBotTurnOptions,
 ): void {
-  const roomId = room.id
   const playerIndex = state.currentPlayerIndex
   const bot = state.players[playerIndex]
 
@@ -150,8 +145,7 @@ function applyBotPlay(
   room.gameState = turnManager.addHistoryEntry(room.gameState, bot, 'play', cardName)
 
   if (result.winResult) {
-    turnManager.cleanup(roomId)
-    emitGameOverToBoth(io, room, result.winResult.winner, result.winResult.reason)
+    endGame(io, room, turnManager, result.winResult.winner, result.winResult.reason)
     return
   }
 
@@ -162,19 +156,8 @@ function applyBotPlay(
     room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
     const worst = chooseWorstCard(room.gameState, playerIndex)
     if (worst) {
-      const player = room.gameState.players[playerIndex]
-      const cardIdx = player.hand.findIndex((c) => c.cardName === worst)
-      const discarded = player.hand[cardIdx]
-      const newHand = [...player.hand]
-      newHand.splice(cardIdx, 1)
-      const players: [typeof player, typeof player] = [...room.gameState.players]
-      players[playerIndex] = { ...player, hand: newHand }
-      room.gameState = {
-        ...room.gameState,
-        players,
-        discardPile: [...room.gameState.discardPile, discarded],
-      }
-      room.gameState = turnManager.addHistoryEntry(room.gameState, bot, 'discard', discarded.cardName)
+      room.gameState = discardFromHand(room.gameState, playerIndex, worst)
+      room.gameState = turnManager.addHistoryEntry(room.gameState, bot, 'discard', worst)
       room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
     }
     // The live draw-discard flow keeps the turn (both cards grant play-again).
@@ -182,16 +165,11 @@ function applyBotPlay(
   }
 
   if (keepTurn) {
-    room.gameState = turnManager.resetTurnTimer(room.gameState)
-    emitGameStateToBoth(io, room)
-    turnManager.startTurn(roomId, room.gameState, () => {
-      handleTurnTimeout(io, roomId, roomManager, turnManager)
-    })
-    maybeScheduleBotTurn(io, roomId, roomManager, turnManager, options.rescheduleDelayMs ?? BOT_CHAIN_DELAY_MS)
+    continueTurn(io, room, roomManager, turnManager, options.rescheduleDelayMs ?? BOT_CHAIN_DELAY_MS)
     return
   }
 
-  finishBotTurn(io, room, roomManager, turnManager)
+  finishTurn(io, room, roomManager, turnManager)
 }
 
 function applyBotDiscard(
@@ -211,30 +189,5 @@ function applyBotDiscard(
   room.gameState = { ...result.state, lastPlayedCard: undefined }
   room.gameState = turnManager.addHistoryEntry(room.gameState, bot, 'discard', cardName)
 
-  finishBotTurn(io, room, roomManager, turnManager)
-}
-
-/** Generate resources for the incoming player, check wins, emit, restart timer. */
-function finishBotTurn(
-  io: Server,
-  room: NonNullable<ReturnType<RoomManager['getRoom']>>,
-  roomManager: RoomManager,
-  turnManager: TurnManager,
-): void {
-  const roomId = room.id
-  room.gameState = turnManager.generateResources(room.gameState!)
-
-  const genWin = checkWin(room.gameState)
-  if (genWin) {
-    room.gameState = { ...room.gameState, phase: 'finished', winner: genWin.winner, winReason: genWin.reason }
-    turnManager.cleanup(roomId)
-    emitGameOverToBoth(io, room, genWin.winner, genWin.reason)
-    return
-  }
-
-  room.gameState = turnManager.resetTurnTimer(room.gameState)
-  emitGameStateToBoth(io, room)
-  turnManager.startTurn(roomId, room.gameState, () => {
-    handleTurnTimeout(io, roomId, roomManager, turnManager)
-  })
+  finishTurn(io, room, roomManager, turnManager)
 }
