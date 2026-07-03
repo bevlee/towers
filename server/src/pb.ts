@@ -10,8 +10,11 @@ pb.autoCancellation(false)
 let connected = false
 
 // Superuser tokens expire (~14 days by default) and the SDK never refreshes them,
-// so re-authenticate periodically. Also serves as a retry if PB was down at boot.
+// so re-authenticate periodically.
 const REAUTH_INTERVAL_MS = 60 * 60 * 1000
+// The server and PocketBase pods start together, so losing the boot race is
+// normal — retry quickly until the first successful connection.
+const CONNECT_RETRY_MS = 5 * 1000
 
 async function authenticate(email: string, password: string): Promise<void> {
   // PocketBase v0.22+ uses _superusers for admin/superuser auth.
@@ -27,12 +30,26 @@ export async function initPb(): Promise<void> {
     return
   }
 
-  try {
-    await authenticate(email, password)
-    connected = true
-    logger.info({ url: process.env.PB_URL }, 'Connected to PocketBase')
-  } catch (err) {
-    logger.error({ err }, 'Failed to connect to PocketBase — stats recording disabled')
+  const tryConnect = async (): Promise<boolean> => {
+    try {
+      await authenticate(email, password)
+      connected = true
+      logger.info({ url: process.env.PB_URL }, 'Connected to PocketBase')
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  if (!(await tryConnect())) {
+    logger.error(
+      { url: process.env.PB_URL },
+      `Failed to connect to PocketBase — retrying every ${CONNECT_RETRY_MS / 1000}s`,
+    )
+    const retry = setInterval(async () => {
+      if (await tryConnect()) clearInterval(retry)
+    }, CONNECT_RETRY_MS)
+    retry.unref()
   }
 
   setInterval(async () => {
