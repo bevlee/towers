@@ -30,11 +30,6 @@ export const state = {
     blue: 'border-blue-600',
     green: 'border-green-600',
   } as const,
-  cardGradient: {
-    red: 'from-red-800 to-red-950',
-    blue: 'from-blue-800 to-blue-950',
-    green: 'from-green-800 to-green-950',
-  } as const,
   cardCostBg: {
     red: 'bg-red-700',
     blue: 'bg-blue-700',

@@ -3,6 +3,8 @@ import type { GameHistoryEntry } from '@towers/shared'
 import { CARD_MAP } from '@towers/shared'
 import { describeEffects } from '../utils/cardText'
 import { state } from '../theme/state'
+import { useArtStyle } from '../hooks/useArtStyle'
+import { CardArt } from './cardArt/CardArt'
 
 interface LastPlayedCardsProps {
   history: GameHistoryEntry[]
@@ -28,6 +30,7 @@ function getLastTurnCards(history: GameHistoryEntry[]): GameHistoryEntry[] {
 }
 
 function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
+  const artStyle = useArtStyle()
   const def = CARD_MAP[entry.cardName]
   if (!def) return null
 
@@ -47,8 +50,10 @@ function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
         {entry.cardName}
       </div>
 
-      {/* Art placeholder */}
-      <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${state.cardGradient[def.color]}`} />
+      {/* Card art */}
+      <div className="mx-1 mt-0.5 h-5 overflow-hidden rounded sm:mt-1 sm:h-8">
+        <CardArt cardName={entry.cardName} color={def.color} artStyle={artStyle} />
+      </div>
 
       {/* Effect text */}
       <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">

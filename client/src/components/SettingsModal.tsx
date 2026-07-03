@@ -1,4 +1,5 @@
 import { WIN_TOWER, WIN_RESOURCES, HAND_SIZE, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
+import { useArtStyle, setArtStyle } from '../hooks/useArtStyle'
 
 interface SettingsModalProps {
   turnTimer: number
@@ -6,6 +7,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
+  const artStyle = useArtStyle()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
       <div
@@ -34,6 +36,24 @@ export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
           <div className="flex justify-between">
             <span className="text-stone-400">AFK Forfeit</span>
             <span className="text-amber-100">{MAX_CONSECUTIVE_TIMEOUTS} timeouts</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-stone-400">Card Art</span>
+            <div className="flex gap-1">
+              {(['monoline', 'arcane'] as const).map((style) => (
+                <button
+                  key={style}
+                  onClick={() => setArtStyle(style)}
+                  className={`rounded px-2 py-1 text-xs font-bold capitalize ${
+                    artStyle === style
+                      ? 'bg-amber-500 text-stone-900'
+                      : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                  }`}
+                >
+                  {style}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

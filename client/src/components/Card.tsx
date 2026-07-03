@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ResourceColor } from '@towers/shared'
 import { state } from '../theme/state'
+import { useArtStyle } from '../hooks/useArtStyle'
+import { CardArt } from './cardArt/CardArt'
 
 interface CardProps {
   cardName: string
@@ -29,6 +31,7 @@ export function Card({
   const canPlay = playable && isYourTurn
   const canAct = isYourTurn
 
+  const artStyle = useArtStyle()
   const [showPreview, setShowPreview] = useState(false)
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressRef = useRef(false)
@@ -94,8 +97,10 @@ export function Card({
           {cardName}
         </div>
 
-        {/* Art placeholder */}
-        <div className={`mx-1 mt-0.5 h-5 rounded bg-gradient-to-b sm:mt-1 sm:h-8 ${state.cardGradient[color]}`} />
+        {/* Card art */}
+        <div className="mx-1 mt-0.5 h-5 overflow-hidden rounded sm:mt-1 sm:h-8">
+          <CardArt cardName={cardName} color={color} artStyle={artStyle} />
+        </div>
 
         {/* Effect text */}
         <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
@@ -144,8 +149,10 @@ export function Card({
               {cardName}
             </div>
 
-            {/* Art placeholder */}
-            <div className={`mx-2 mt-2 h-20 rounded bg-gradient-to-b ${state.cardGradient[color]}`} />
+            {/* Card art */}
+            <div className="mx-2 mt-2 h-20 overflow-hidden rounded">
+              <CardArt cardName={cardName} color={color} artStyle={artStyle} />
+            </div>
 
             {/* Effect text */}
             <div className="flex-1 px-3 py-2 text-center text-sm leading-snug text-stone-300">

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Towers — Card Art Style Mockups</title>
+<style>
+  body { background: #1c1917; color: #e7e5e4; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; padding: 32px; }
+  h1 { font-size: 22px; margin: 0 0 4px; color: #fef3c7; }
+  .sub { color: #a8a29e; margin-bottom: 32px; font-size: 14px; }
+  h2 { font-size: 16px; margin: 40px 0 4px; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.08em; }
+  .note { color: #a8a29e; font-size: 13px; margin: 0 0 14px; max-width: 720px; }
+  .row { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  /* Replica of the in-game card (preview size) */
+  .card { width: 224px; height: 300px; background: #292524; border-radius: 12px; border: 4px solid; display: flex; flex-direction: column; overflow: hidden; }
+  .card.red   { border-color: #dc2626; }
+  .card.blue  { border-color: #2563eb; }
+  .card.green { border-color: #16a34a; }
+  .name { background: #44403c; padding: 8px 12px; text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 15px; color: #fef3c7; }
+  .art { margin: 8px 8px 0; height: 80px; border-radius: 4px; overflow: hidden; background: #0c0a09; }
+  .art svg { display: block; width: 100%; height: 100%; }
+  .fx { flex: 1; padding: 10px 12px; text-align: center; font-size: 13px; line-height: 1.35; color: #d6d3d1; }
+  .bottom { display: flex; justify-content: flex-end; padding: 0 12px 12px; }
+  .cost { width: 44px; height: 44px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; }
+  .cost.red   { background: #b91c1c; }
+  .cost.blue  { background: #1d4ed8; }
+  .cost.green { background: #15803d; }
+</style>
+</head>
+<body>
+
+<h1>Towers — card art style mockups</h1>
+<div class="sub">Same four cards (Basic Wall &middot; Earthquake &middot; Prism &middot; Faery) in four SVG styles, inside the real card frame. All vector, all in-repo, all recolorable.</div>
+
+<!-- ============ STYLE 1: FLAT GEOMETRIC ============ -->
+<h2>Style 1 — Flat geometric</h2>
+<p class="note">Flat shapes, no outlines, muted per-color backdrops. Cheap to author, scales to all ~50 cards fast, reads clearly at the tiny in-hand size.</p>
+<div class="row">
+
+  <div class="card red">
+    <div class="name">Basic Wall</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <rect width="208" height="80" fill="#3f1d1d"/>
+        <circle cx="170" cy="18" r="12" fill="#f59e0b"/>
+        <circle cx="170" cy="18" r="12" fill="#3f1d1d" opacity="0" />
+        <!-- wall -->
+        <g>
+          <rect x="24" y="34" width="16" height="10" fill="#9a3412"/>
+          <rect x="56" y="34" width="16" height="10" fill="#9a3412"/>
+          <rect x="88" y="34" width="16" height="10" fill="#9a3412"/>
+          <rect x="120" y="34" width="16" height="10" fill="#9a3412"/>
+          <rect x="152" y="34" width="16" height="10" fill="#9a3412"/>
+          <rect x="16" y="44" width="176" height="36" fill="#9a3412"/>
+          <!-- brick joints -->
+          <g fill="#7c2d12">
+            <rect x="16" y="52" width="176" height="2"/>
+            <rect x="16" y="62" width="176" height="2"/>
+            <rect x="16" y="72" width="176" height="2"/>
+            <rect x="48" y="44" width="3" height="8"/><rect x="96" y="44" width="3" height="8"/><rect x="144" y="44" width="3" height="8"/>
+            <rect x="72" y="54" width="3" height="8"/><rect x="120" y="54" width="3" height="8"/><rect x="168" y="54" width="3" height="8"/>
+            <rect x="48" y="64" width="3" height="8"/><rect x="96" y="64" width="3" height="8"/><rect x="144" y="64" width="3" height="8"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="fx">+3 Wall</div>
+    <div class="bottom"><div class="cost red">2</div></div>
+  </div>
+
+  <div class="card red">
+    <div class="name">Earthquake</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <rect width="208" height="80" fill="#3f1d1d"/>
+        <!-- two tower halves tilting apart -->
+        <g fill="#57534e">
+          <polygon points="60,70 64,22 88,22 86,70"  transform="rotate(-7 74 70)"/>
+          <polygon points="122,70 120,22 144,22 148,70" transform="rotate(7 134 70)"/>
+        </g>
+        <g fill="#78716c">
+          <rect x="62" y="16" width="6" height="8" transform="rotate(-7 74 70)"/>
+          <rect x="73" y="16" width="6" height="8" transform="rotate(-7 74 70)"/>
+          <rect x="84" y="16" width="6" height="8" transform="rotate(-7 74 70)"/>
+          <rect x="119" y="16" width="6" height="8" transform="rotate(7 134 70)"/>
+          <rect x="130" y="16" width="6" height="8" transform="rotate(7 134 70)"/>
+          <rect x="141" y="16" width="6" height="8" transform="rotate(7 134 70)"/>
+        </g>
+        <!-- ground + crack -->
+        <rect x="0" y="70" width="208" height="10" fill="#44403c"/>
+        <polygon points="96,80 104,58 112,80 108,80 104,66 100,80" fill="#0c0a09"/>
+        <polygon points="104,58 100,44 106,50 104,58" fill="#0c0a09"/>
+        <!-- shock arcs -->
+        <g stroke="#f59e0b" stroke-width="3" fill="none" stroke-linecap="round">
+          <path d="M20 60 l10 -4"/><path d="M16 48 l10 -1"/>
+          <path d="M188 60 l-10 -4"/><path d="M192 48 l-10 -1"/>
+        </g>
+      </svg>
+    </div>
+    <div class="fx">All players lose 1 mine level</div>
+    <div class="bottom"><div class="cost red">0</div></div>
+  </div>
+
+  <div class="card blue">
+    <div class="name">Prism</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <rect width="208" height="80" fill="#0f1e46"/>
+        <!-- incoming beam -->
+        <polygon points="0,38 88,38 88,44 0,44" fill="#e0f2fe"/>
+        <!-- prism -->
+        <polygon points="104,10 76,64 132,64" fill="#60a5fa"/>
+        <polygon points="104,10 104,64 132,64" fill="#3b82f6"/>
+        <!-- spectrum out -->
+        <polygon points="118,38 208,16 208,28" fill="#f87171"/>
+        <polygon points="118,40 208,34 208,44" fill="#fbbf24"/>
+        <polygon points="118,42 208,52 208,64" fill="#4ade80"/>
+      </svg>
+    </div>
+    <div class="fx">Draw and discard a card. Play again</div>
+    <div class="bottom"><div class="cost blue">2</div></div>
+  </div>
+
+  <div class="card green">
+    <div class="name">Faery</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <rect width="208" height="80" fill="#122b1c"/>
+        <circle cx="172" cy="20" r="14" fill="#fef9c3"/>
+        <circle cx="166" cy="16" r="12" fill="#122b1c"/>
+        <!-- faery -->
+        <g>
+          <ellipse cx="82" cy="38" rx="18" ry="9" fill="#86efac" opacity="0.75" transform="rotate(-28 82 38)"/>
+          <ellipse cx="82" cy="52" rx="15" ry="7" fill="#86efac" opacity="0.55" transform="rotate(-8 82 52)"/>
+          <ellipse cx="104" cy="44" rx="5" ry="12" fill="#166534"/>
+          <circle cx="104" cy="28" r="6" fill="#bbf7d0"/>
+        </g>
+        <!-- sparkles -->
+        <g fill="#fef9c3">
+          <circle cx="128" cy="58" r="2"/><circle cx="140" cy="40" r="1.5"/>
+          <circle cx="52" cy="22" r="1.5"/><circle cx="36" cy="56" r="2"/>
+          <circle cx="152" cy="64" r="1.5"/>
+        </g>
+      </svg>
+    </div>
+    <div class="fx">2 damage. Play again</div>
+    <div class="bottom"><div class="cost green">1</div></div>
+  </div>
+</div>
+
+<!-- ============ STYLE 2: MONOLINE ============ -->
+<h2>Style 2 — Monoline icon</h2>
+<p class="note">Single-weight line art in the card's accent color on dark. Most "designed" look, extremely consistent across a big set, trivially recolorable via <code>currentColor</code>.</p>
+<div class="row">
+
+  <div class="card red">
+    <div class="name">Basic Wall</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="208" height="80" fill="#1c1917" stroke="none"/>
+        <path d="M56 66 V34 h10 v-8 h12 v8 h18 v-8 h12 v8 h18 v-8 h12 v8 h10 v32 z"/>
+        <path d="M56 45 h96 M56 56 h96"/>
+        <path d="M80 34 v11 M104 34 v11 M128 34 v11"/>
+        <path d="M68 45 v11 M92 45 v11 M116 45 v11 M140 45 v11"/>
+        <path d="M80 56 v10 M104 56 v10 M128 56 v10"/>
+      </svg>
+    </div>
+    <div class="fx">+3 Wall</div>
+    <div class="bottom"><div class="cost red">2</div></div>
+  </div>
+
+  <div class="card red">
+    <div class="name">Earthquake</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="208" height="80" fill="#1c1917" stroke="none"/>
+        <path d="M84 66 V24 h6 v-6 h8 v6 h12 v-6 h8 v6 h6 v42"/>
+        <path d="M104 24 l-8 12 10 8 -9 12 8 10" stroke-width="3"/>
+        <path d="M40 66 h32 M96 66 h-4 M124 66 h-8 M168 66 h-28" />
+        <path d="M76 66 l8 8 M116 66 l-6 8" />
+        <path d="M30 46 l12 -3 M178 46 l-12 -3 M36 32 l10 2 M172 32 l-10 2"/>
+      </svg>
+    </div>
+    <div class="fx">All players lose 1 mine level</div>
+    <div class="bottom"><div class="cost red">0</div></div>
+  </div>
+
+  <div class="card blue">
+    <div class="name">Prism</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80" fill="none" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="208" height="80" fill="#1c1917" stroke="none"/>
+        <path d="M104 14 L78 62 h52 z"/>
+        <path d="M24 40 h50" stroke-dasharray="6 5"/>
+        <path d="M120 34 l64 -16 M122 40 l62 0 M120 46 l64 16"/>
+        <circle cx="104" cy="44" r="3"/>
+      </svg>
+    </div>
+    <div class="fx">Draw and discard a card. Play again</div>
+    <div class="bottom"><div class="cost blue">2</div></div>
+  </div>
+
+  <div class="card green">
+    <div class="name">Faery</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80" fill="none" stroke="#86efac" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="208" height="80" fill="#1c1917" stroke="none"/>
+        <circle cx="104" cy="26" r="7"/>
+        <path d="M104 33 v20 M104 40 l-8 8 M104 40 l8 8 M104 53 l-6 12 M104 53 l6 12"/>
+        <path d="M96 38 C74 26 66 40 92 46 M112 38 c22 -12 30 2 4 8"/>
+        <path d="M48 24 l0 10 M43 29 l10 0" stroke-width="2"/>
+        <path d="M160 52 l0 10 M155 57 l10 0" stroke-width="2"/>
+        <path d="M148 18 l0 6 M145 21 l6 0" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="fx">2 damage. Play again</div>
+    <div class="bottom"><div class="cost green">1</div></div>
+  </div>
+</div>
+
+<!-- ============ STYLE 3: ARCANE GLOW ============ -->
+<h2>Style 3 — Arcane glow</h2>
+<p class="note">Neon shapes with SVG blur filters over deep gradients. Most atmospheric on your dark UI; slightly more effort per card and needs care to stay readable when small.</p>
+<div class="row">
+
+  <div class="card red">
+    <div class="name">Basic Wall</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <defs>
+          <radialGradient id="g1r" cx="50%" cy="80%" r="80%">
+            <stop offset="0%" stop-color="#450a0a"/><stop offset="100%" stop-color="#0c0a09"/>
+          </radialGradient>
+          <filter id="bl1"><feGaussianBlur stdDeviation="2.5"/></filter>
+        </defs>
+        <rect width="208" height="80" fill="url(#g1r)"/>
+        <g stroke="#f97316" stroke-width="2" fill="none" filter="url(#bl1)" opacity="0.9">
+          <path d="M56 66 V34 h10 v-8 h12 v8 h18 v-8 h12 v8 h18 v-8 h12 v8 h10 v32 z"/>
+          <path d="M56 45 h96 M56 56 h96"/>
+          <path d="M80 34 v11 M104 34 v11 M128 34 v11 M68 45 v11 M92 45 v11 M116 45 v11 M140 45 v11 M80 56 v10 M104 56 v10 M128 56 v10"/>
+        </g>
+        <g stroke="#fed7aa" stroke-width="1.2" fill="none">
+          <path d="M56 66 V34 h10 v-8 h12 v8 h18 v-8 h12 v8 h18 v-8 h12 v8 h10 v32 z"/>
+          <path d="M56 45 h96 M56 56 h96"/>
+        </g>
+        <circle cx="34" cy="24" r="1.5" fill="#fdba74"/><circle cx="176" cy="18" r="1.5" fill="#fdba74"/><circle cx="186" cy="50" r="1" fill="#fdba74"/>
+      </svg>
+    </div>
+    <div class="fx">+3 Wall</div>
+    <div class="bottom"><div class="cost red">2</div></div>
+  </div>
+
+  <div class="card red">
+    <div class="name">Earthquake</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <defs>
+          <radialGradient id="g2r" cx="50%" cy="90%" r="90%">
+            <stop offset="0%" stop-color="#450a0a"/><stop offset="100%" stop-color="#0c0a09"/>
+          </radialGradient>
+          <filter id="bl2"><feGaussianBlur stdDeviation="3"/></filter>
+        </defs>
+        <rect width="208" height="80" fill="url(#g2r)"/>
+        <g fill="#1c1917" stroke="#292524" stroke-width="1">
+          <polygon points="62,68 66,20 88,20 86,68" transform="rotate(-6 74 68)"/>
+          <polygon points="122,68 120,20 142,20 146,68" transform="rotate(6 132 68)"/>
+        </g>
+        <path d="M20 70 h60 l12 -14 14 10 -10 14" fill="none" stroke="#ef4444" stroke-width="4" filter="url(#bl2)"/>
+        <path d="M20 70 h58 M188 70 h-64 M78 70 l14 -16 12 9 -9 15" fill="none" stroke="#fecaca" stroke-width="1.5"/>
+        <g stroke="#f87171" stroke-width="2" fill="none" filter="url(#bl2)">
+          <path d="M28 50 l14 -4 M180 50 l-14 -4 M34 34 l12 1 M174 34 l-12 1"/>
+        </g>
+      </svg>
+    </div>
+    <div class="fx">All players lose 1 mine level</div>
+    <div class="bottom"><div class="cost red">0</div></div>
+  </div>
+
+  <div class="card blue">
+    <div class="name">Prism</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <defs>
+          <radialGradient id="g3b" cx="50%" cy="50%" r="80%">
+            <stop offset="0%" stop-color="#172554"/><stop offset="100%" stop-color="#0c0a09"/>
+          </radialGradient>
+          <filter id="bl3"><feGaussianBlur stdDeviation="3"/></filter>
+        </defs>
+        <rect width="208" height="80" fill="url(#g3b)"/>
+        <g filter="url(#bl3)">
+          <rect x="0" y="38" width="86" height="5" fill="#e0f2fe"/>
+          <polygon points="104,12 76,64 132,64" fill="none" stroke="#93c5fd" stroke-width="3"/>
+          <polygon points="118,36 208,14 208,26" fill="#ef4444" opacity="0.85"/>
+          <polygon points="118,39 208,34 208,44" fill="#f59e0b" opacity="0.85"/>
+          <polygon points="118,42 208,52 208,64" fill="#22c55e" opacity="0.85"/>
+        </g>
+        <polygon points="104,12 76,64 132,64" fill="none" stroke="#dbeafe" stroke-width="1.5"/>
+        <rect x="0" y="39" width="84" height="2.5" fill="#f0f9ff"/>
+      </svg>
+    </div>
+    <div class="fx">Draw and discard a card. Play again</div>
+    <div class="bottom"><div class="cost blue">2</div></div>
+  </div>
+
+  <div class="card green">
+    <div class="name">Faery</div>
+    <div class="art">
+      <svg viewBox="0 0 208 80">
+        <defs>
+          <radialGradient id="g4g" cx="50%" cy="45%" r="75%">
+            <stop offset="0%" stop-color="#14532d"/><stop offset="100%" stop-color="#0c0a09"/>
+          </radialGradient>
+          <filter id="bl4"><feGaussianBlur stdDeviation="3.5"/></filter>
+        </defs>
+        <rect width="208" height="80" fill="url(#g4g)"/>
+        <circle cx="104" cy="38" r="14" fill="#4ade80" filter="url(#bl4)"/>
+        <circle cx="104" cy="38" r="6" fill="#f0fdf4"/>
+        <g stroke="#86efac" stroke-width="2" fill="none" filter="url(#bl4)" opacity="0.9">
+          <path d="M96 34 C70 18 58 40 90 44 M112 34 c26 -16 38 6 4 10"/>
+        </g>
+        <g fill="#bbf7d0">
+          <circle cx="140" cy="24" r="1.6"/><circle cx="152" cy="52" r="1.3"/>
+          <circle cx="64" cy="58" r="1.6"/><circle cx="48" cy="26" r="1.2"/>
+          <circle cx="124" cy="62" r="1.2"/><circle cx="170" cy="36" r="1.4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="fx">2 damage. Play again</div>
+    <div class="bottom"><div class="cost green">1</div></div>
+  </div>
+</div>
+
+<!-- ============ STYLE 4: PIXEL ART ============ -->
+<h2>Style 4 — Pixel art</h2>
+<p class="note">Chunky retro sprites (rendered here from character maps into SVG rects). Strong nostalgic Arcomage vibe; art is literally a text grid, so it's very easy to tweak.</p>
+<div class="row" id="pixelRow"></div>
+
+<script>
+// Pixel style: 26x10 grid of 8px cells rendered as SVG rects.
+const PAL = {
+  '.': null,
+  // basic wall
+  'S': '#3f1d1d', 'u': '#f59e0b', 'B': '#9a3412', 'b': '#7c2d12',
+  // earthquake
+  'K': '#2a1215', 'T': '#57534e', 't': '#78716c', 'X': '#0c0a09', 'o': '#f59e0b',
+  // prism
+  'N': '#0f1e46', 'W': '#e0f2fe', 'P': '#60a5fa', 'p': '#3b82f6', 'r': '#f87171', 'y': '#fbbf24', 'g': '#4ade80',
+  // faery
+  'F': '#122b1c', 'm': '#fef9c3', 'w': '#86efac', 'd': '#166534', 'h': '#bbf7d0', 's': '#fef08a',
+}
+
+const CARDS = [
+  { name: 'Basic Wall', color: 'red', cost: 2, fx: '+3 Wall', map: [
+    'SSSSSSSSSSSSSSSSSSSSSuuSSS'.slice(0,26),
+    'SSSSSSSSSSSSSSSSSSSSuuuuSS',
+    'SSSSSSSSSSSSSSSSSSSSSuuSSS',
+    'SSBBSSBBSSBBSSBBSSBBSSBBSS',
+    'SSBBSSBBSSBBSSBBSSBBSSBBSS',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBbBBBBbBBBBbBBBBbBBBBbBB',
+    'BbBBBBbBBBBbBBBBbBBBBbBBBB',
+    'BBBbBBBBbBBBBbBBBBbBBBBbBB',
+    'BbBBBBbBBBBbBBBBbBBBBbBBBB',
+  ]},
+  { name: 'Earthquake', color: 'red', cost: 0, fx: 'All players lose 1 mine level', map: [
+    'KKKKKKKKKKKKKKKKKKKKKKKKKK',
+    'KKKKKKKKKtKtKtKtKKKKKKKKKK',
+    'KKKKKKKKKttttttttKKKKKKKKK',
+    'KKKoKKKKKttXXttttKKKKoKKKK',
+    'KKooKKKKKtttXXtttKKKKooKKK',
+    'KKKKKKKKKttXXttttKKKKKKKKK',
+    'KKKKKKKKKtXXtttttKKKKKKKKK',
+    'KKKKKKKKKttXXXtttKKKKKKKKK',
+    'TTTTTTTTTTTTXXTTTTTTTTTTTT',
+    'TTTTTTTTTTTXXXXTTTTTTTTTTT',
+  ]},
+  { name: 'Prism', color: 'blue', cost: 2, fx: 'Draw and discard a card. Play again', map: [
+    'NNNNNNNNNNNNNNNNNNNNNNNNNN',
+    'NNNNNNNNNNNNPNNNNNNNNNNrrN',
+    'NNNNNNNNNNNPPpNNNNNrrrrNNN',
+    'NNNNNNNNNNNPPpNNrrrNNNNNNN',
+    'WWWWWWWWWWPPPppyyyyyyyyyyy',
+    'NNNNNNNNNNPPPppNNNNNNNNNNN',
+    'NNNNNNNNNPPPPppNNgggNNNNNN',
+    'NNNNNNNNNPPPPppNNNNNgggNNN',
+    'NNNNNNNNPPPPPppNNNNNNNNggg',
+    'NNNNNNNNNNNNNNNNNNNNNNNNNN',
+  ]},
+  { name: 'Faery', color: 'green', cost: 1, fx: '2 damage. Play again', map: [
+    'FFFFFFFFFFFFFFFFFFFFFmmFFF',
+    'FFsFFFFFFFFFFFFFFFFFmmmmFF',
+    'FFFFFFFFFFFhhFFFFFFFFmmFFF',
+    'FFFFFwwFFFFhhFFwwFFFFFFFFF',
+    'FFFwwwwwFFFddFwwwwwFFFsFFF',
+    'FFwwwwwwwFFddFwwwwwwFFFFFF',
+    'FFFwwwwFFFFddFFwwwwFFFFFFF',
+    'FFFFFFFFFFdFFdFFFFFFFFFFFF',
+    'FFsFFFFFFdFFFFdFFFFFFFFFFF',
+    'FFFFFFFFFFFFFFFFFFFsFFFFFF',
+  ]},
+]
+
+function pixelSvg(map) {
+  let rects = ''
+  map.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = PAL[row[x]]
+      if (c) rects += `<rect x="${x*8}" y="${y*8}" width="8" height="8" fill="${c}"/>`
+    }
+  })
+  return `<svg viewBox="0 0 208 80" shape-rendering="crispEdges">${rects}</svg>`
+}
+
+document.getElementById('pixelRow').innerHTML = CARDS.map(c => `
+  <div class="card ${c.color}">
+    <div class="name">${c.name}</div>
+    <div class="art">${pixelSvg(c.map)}</div>
+    <div class="fx">${c.fx}</div>
+    <div class="bottom"><div class="cost ${c.color}">${c.cost}</div></div>
+  </div>`).join('')
+</script>
+
+</body>
+</html>
