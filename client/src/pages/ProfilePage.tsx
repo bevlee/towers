@@ -1,4 +1,4 @@
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useProfile } from '../hooks/useProfile'
 import type { MatchRow } from '../hooks/useProfile'
 
@@ -106,6 +106,7 @@ function Breakdown({ label, value }: { label: string; value: number }) {
 }
 
 function MatchCard({ match, viewerId }: { match: MatchRow; viewerId: string }) {
+  const navigate = useNavigate()
   const isWin = match.winner.id === viewerId
   const opponent = isWin ? match.loser : match.winner
   const reasonLabel = WIN_REASON_LABEL[match.win_reason] ?? match.win_reason
@@ -121,13 +122,27 @@ function MatchCard({ match, viewerId }: { match: MatchRow; viewerId: string }) {
         </span>
         <div>
           <div className="text-sm">
-            vs <Link
-              to={`/profile/${opponent.username}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-amber-300 hover:text-amber-200"
+            vs{' '}
+            {/* Not a <Link>: anchors can't nest inside the card's anchor */}
+            <span
+              role="link"
+              tabIndex={0}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(`/profile/${opponent.username}`)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  navigate(`/profile/${opponent.username}`)
+                }
+              }}
+              className="cursor-pointer text-amber-300 hover:text-amber-200 hover:underline"
             >
               {opponent.username}
-            </Link>
+            </span>
           </div>
           <div className="text-xs text-stone-400">
             {reasonLabel} • {match.turn_count} turns • {formatDate(match.created)}

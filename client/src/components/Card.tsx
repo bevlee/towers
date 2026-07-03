@@ -103,7 +103,7 @@ export function Card({
         </div>
 
         {/* Effect text */}
-        <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
+        <div className="flex-1 px-1 py-0.5 text-center text-[9px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
           {effectText}
         </div>
 
@@ -112,7 +112,7 @@ export function Card({
           {/* Discard button */}
           {canDiscard && canAct ? (
             <button
-              className="flex h-5 w-5 items-center justify-center rounded bg-stone-600 text-xs font-bold text-red-400 hover:bg-stone-500 sm:h-6 sm:w-6 sm:text-xs"
+              className="flex h-6 w-6 items-center justify-center rounded bg-stone-600 text-xs font-bold text-red-400 hover:bg-stone-500"
               onClick={(e) => {
                 e.stopPropagation()
                 onDiscard()
@@ -122,7 +122,7 @@ export function Card({
               -
             </button>
           ) : (
-            <div className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="h-6 w-6" />
           )}
 
           {/* Cost circle */}

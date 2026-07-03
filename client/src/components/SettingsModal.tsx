@@ -9,9 +9,9 @@ interface SettingsModalProps {
 export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
   const artStyle = useArtStyle()
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
-        className="flex w-80 flex-col gap-4 rounded-xl border border-stone-600 bg-stone-800 px-8 py-6 shadow-2xl"
+        className="flex w-full max-w-xs flex-col gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-8"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-center text-xl font-bold text-amber-400">Game Settings</h2>
