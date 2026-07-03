@@ -2,20 +2,12 @@ import { useParams, Link } from 'react-router-dom'
 import { useMatch } from '../hooks/useMatch'
 import type { Play } from '../hooks/useMatch'
 import { HoverCardName } from '../components/HoverCardName'
+import { WIN_REASON_LABEL } from '../utils/winReasons'
 
 const ACTION_LABEL: Record<Play['action'], string> = {
   play:             'played',
   discard:          'discarded',
   timeout_discard: 'timeout-discarded',
-}
-
-const WIN_REASON_LABEL: Record<string, string> = {
-  tower_destroyed: 'Tower destroyed',
-  tower_built:     'Tower built',
-  resources:       'Resources',
-  timeout:         'Timeout',
-  afk:             'AFK',
-  forfeit:         'Forfeit',
 }
 
 export function MatchPage() {

@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
-
-const SERVER_URL = ''
+import { useFetchJson } from './useFetchJson'
 
 interface UserRecord {
   id: string
@@ -35,45 +33,23 @@ interface ProfileData {
 }
 
 export function useProfile(username: string, page: number): ProfileData {
-  const [user, setUser] = useState<UserRecord | null>(null)
-  const [matches, setMatches] = useState<MatchRow[]>([])
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const encoded = encodeURIComponent(username)
+  const userQuery = useFetchJson<UserRecord>(
+    `/api/profile/${encoded}`,
+    'User not found',
+    'Failed to load profile',
+  )
+  const matchQuery = useFetchJson<{ items: MatchRow[]; totalPages: number }>(
+    `/api/profile/${encoded}/matches?page=${page}`,
+    'Failed to load matches',
+    'Failed to load matches',
+  )
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const [userRes, matchRes] = await Promise.all([
-          fetch(`${SERVER_URL}/api/profile/${encodeURIComponent(username)}`),
-          fetch(`${SERVER_URL}/api/profile/${encodeURIComponent(username)}/matches?page=${page}`),
-        ])
-
-        if (!userRes.ok) throw new Error(userRes.status === 404 ? 'User not found' : 'Failed to load profile')
-        if (!matchRes.ok) throw new Error('Failed to load matches')
-
-        const u = await userRes.json()
-        const m = await matchRes.json()
-
-        if (cancelled) return
-        setUser(u)
-        setMatches(m.items)
-        setTotalPages(Math.max(1, m.totalPages))
-      } catch (err: any) {
-        if (cancelled) return
-        setError(err?.message ?? 'Failed to load profile')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [username, page])
-
-  return { user, matches, totalPages, loading, error }
+  return {
+    user: userQuery.data,
+    matches: matchQuery.data?.items ?? [],
+    totalPages: Math.max(1, matchQuery.data?.totalPages ?? 1),
+    loading: userQuery.loading || matchQuery.loading,
+    error: userQuery.error ?? matchQuery.error,
+  }
 }

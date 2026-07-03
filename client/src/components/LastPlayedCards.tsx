@@ -2,9 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import type { GameHistoryEntry } from '@towers/shared'
 import { CARD_MAP } from '@towers/shared'
 import { describeEffects } from '../utils/cardText'
-import { state } from '../theme/state'
-import { useArtStyle } from '../hooks/useArtStyle'
-import { CardArt } from './cardArt/CardArt'
+import { CardFace } from './CardFace'
 
 interface LastPlayedCardsProps {
   history: GameHistoryEntry[]
@@ -30,46 +28,19 @@ function getLastTurnCards(history: GameHistoryEntry[]): GameHistoryEntry[] {
 }
 
 function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
-  const artStyle = useArtStyle()
   const def = CARD_MAP[entry.cardName]
   if (!def) return null
 
   const isDiscard = entry.action !== 'play'
 
   return (
-    <div
-      className={`
-        relative flex h-28 w-20 flex-shrink-0 flex-col rounded-lg border-2 bg-stone-800
-        sm:h-40 sm:w-28
-        ${state.cardBorder[def.color]}
-        ${isDiscard ? 'opacity-50' : ''}
-      `}
+    <CardFace
+      cardName={entry.cardName}
+      color={def.color}
+      cost={def.cost}
+      effectText={describeEffects(def)}
+      className={`flex-shrink-0 ${isDiscard ? 'opacity-50' : ''}`}
     >
-      {/* Card name */}
-      <div className="rounded-t-md bg-stone-700 px-1 py-0.5 text-center text-[9px] font-bold uppercase leading-tight text-amber-100 sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide">
-        {entry.cardName}
-      </div>
-
-      {/* Card art */}
-      <div className="mx-1 mt-0.5 h-5 overflow-hidden rounded sm:mt-1 sm:h-8">
-        <CardArt cardName={entry.cardName} color={def.color} artStyle={artStyle} />
-      </div>
-
-      {/* Effect text */}
-      <div className="flex-1 px-1 py-0.5 text-center text-[9px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
-        {describeEffects(def)}
-      </div>
-
-      {/* Bottom bar */}
-      <div className="flex items-center justify-end px-1 pb-0.5 sm:px-2 sm:pb-1">
-        <div
-          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white sm:h-7 sm:w-7 sm:text-sm ${state.cardCostBg[def.color]}`}
-        >
-          {def.cost}
-        </div>
-      </div>
-
-      {/* Discard badge */}
       {isDiscard && (
         <div className="absolute bottom-1 left-1">
           <span className="px-1 py-0.5 text-[9px] font-bold uppercase text-stone-300/80 sm:px-2 sm:text-[10px]">
@@ -77,7 +48,7 @@ function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
           </span>
         </div>
       )}
-    </div>
+    </CardFace>
   )
 }
 
