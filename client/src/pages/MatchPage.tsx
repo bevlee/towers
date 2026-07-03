@@ -1,17 +1,12 @@
 import { useParams, Link } from 'react-router-dom'
 import { useMatch } from '../hooks/useMatch'
 import type { Play } from '../hooks/useMatch'
+import { HoverCardName } from '../components/HoverCardName'
 
 const ACTION_LABEL: Record<Play['action'], string> = {
   play:             'played',
   discard:          'discarded',
   timeout_discard: 'timeout-discarded',
-}
-
-const COLOR_CLASS: Record<string, string> = {
-  red:   'text-red-400',
-  blue:  'text-blue-400',
-  green: 'text-emerald-400',
 }
 
 const WIN_REASON_LABEL: Record<string, string> = {
@@ -88,7 +83,7 @@ function TurnList({ plays }: { plays: Play[] }) {
             {turnPlays.map((p) => (
               <li key={p.id} className="text-sm text-stone-300">
                 <span className="text-stone-500">•</span> {ACTION_LABEL[p.action]}{' '}
-                <span className={`font-bold ${COLOR_CLASS[p.card_color] ?? ''}`}>{p.card_name}</span>
+                <HoverCardName cardName={p.card_name} />
               </li>
             ))}
           </ul>
