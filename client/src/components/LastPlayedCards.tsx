@@ -56,7 +56,7 @@ function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
       </div>
 
       {/* Effect text */}
-      <div className="flex-1 px-1 py-0.5 text-center text-[8px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
+      <div className="flex-1 px-1 py-0.5 text-center text-[9px] leading-tight text-stone-300 sm:px-2 sm:py-1 sm:text-[10px]">
         {describeEffects(def)}
       </div>
 
@@ -72,7 +72,7 @@ function PlayedCard({ entry }: { entry: GameHistoryEntry }) {
       {/* Discard badge */}
       {isDiscard && (
         <div className="absolute bottom-1 left-1">
-          <span className="px-1 py-0.5 text-[8px] font-bold uppercase text-stone-20/70 sm:px-2 sm:text-[10px]">
+          <span className="px-1 py-0.5 text-[9px] font-bold uppercase text-stone-300/80 sm:px-2 sm:text-[10px]">
             discarded
           </span>
         </div>
@@ -96,7 +96,7 @@ export function LastPlayedCards({ history, yourPlayerId }: LastPlayedCardsProps)
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="text-[10px] uppercase tracking-wider text-stone-500">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-stone-400">{label}</div>
       <div className="relative" style={{ paddingTop: earlier.length * stackOffsetPx }}>
         <AnimatePresence mode="popLayout">
           {earlier.map((entry, i) => (

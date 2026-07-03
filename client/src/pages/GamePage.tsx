@@ -176,8 +176,8 @@ export function GamePage({
         style={{ height: historyHeight }}
       >
         <div className="flex items-center justify-between border-b border-stone-800 px-3 py-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500">History</span>
-          <span className="text-xs text-stone-600">{gameState.history.length} moves</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-stone-400">History</span>
+          <span className="text-xs text-stone-500">{gameState.history.length} moves</span>
         </div>
         <div className="min-h-0 flex-1">
           <GameHistory history={gameState.history} yourPlayerId={you.playerId} />
@@ -186,7 +186,7 @@ export function GamePage({
 
       {/* Mobile history collapsed bar */}
       <button
-        className="flex flex-shrink-0 items-center justify-between border-t border-stone-700 bg-stone-950 px-3 py-1.5 text-xs text-stone-500 sm:hidden"
+        className="flex flex-shrink-0 items-center justify-between border-t border-stone-700 bg-stone-950 px-3 py-1.5 text-xs text-stone-400 sm:hidden"
         style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
         onClick={() => setHistoryOpen(true)}
       >
@@ -204,8 +204,8 @@ export function GamePage({
           >
             <div className="flex items-center justify-between border-b border-stone-800 px-3 py-2">
               <div className="flex items-baseline gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500">History</span>
-                <span className="text-xs text-stone-600">{gameState.history.length} moves</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-400">History</span>
+                <span className="text-xs text-stone-500">{gameState.history.length} moves</span>
               </div>
               <button
                 className="rounded p-1 text-stone-400 hover:bg-stone-800 hover:text-amber-300"
@@ -243,9 +243,9 @@ export function GamePage({
 
       {/* Leave game confirmation */}
       {showLeaveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowLeaveConfirm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowLeaveConfirm(false)}>
           <div
-            className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-10 py-6 shadow-2xl"
+            className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-10"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold text-red-400">Leave Game?</h2>

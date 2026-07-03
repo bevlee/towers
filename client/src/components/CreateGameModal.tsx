@@ -76,7 +76,7 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <form
-        className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-xl border border-stone-600 bg-stone-800 px-8 py-6 shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-xl border border-stone-600 bg-stone-800 px-5 py-6 shadow-2xl sm:px-8"
         onSubmit={handleSubmit}
       >
         <h2 className="text-xl font-bold text-amber-200">Create a Challenge</h2>

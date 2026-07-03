@@ -47,8 +47,8 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
   const inputErr = 'border-red-700 focus:border-red-500'
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-900">
-      <div className="flex w-80 flex-col items-center gap-6 rounded-xl border border-stone-700 bg-stone-800 px-10 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-stone-900 p-4">
+      <div className="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl border border-stone-700 bg-stone-800 px-6 py-8 sm:px-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-amber-400">Two Towers</h1>
           <p className="mt-1 text-sm text-stone-400">The card game</p>
