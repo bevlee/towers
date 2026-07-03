@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { GameConfig, RoomInfo } from '@towers/shared'
 import { GameList } from '../components/GameList'
 import { CreateGameModal } from '../components/CreateGameModal'
@@ -8,7 +9,7 @@ interface HomePageProps {
   rooms: RoomInfo[]
   onRefresh: () => void
   onJoin: (roomId: string) => void
-  onCreate: (turnTimer: number, gameConfig: GameConfig) => void
+  onCreate: (turnTimer: number, gameConfig: GameConfig, bot?: 'easy' | 'hard') => void
   onLeaveRoom: (roomId: string) => void
   currentRoom: RoomInfo | null
   error: string | null
@@ -33,6 +34,12 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
           <h1 className="text-2xl font-bold text-amber-400">Two Towers &mdash; Card Game</h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-stone-400">Playing as <span className="text-amber-200">{username}</span></span>
+            <Link
+              to="/profile"
+              className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-amber-500 hover:text-amber-200 transition-colors"
+            >
+              Profile
+            </Link>
             <button
               onClick={onLogout}
               className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-colors"
@@ -93,8 +100,8 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
       {showCreate && (
         <CreateGameModal
           onClose={() => setShowCreate(false)}
-          onCreate={(timer, config) => {
-            onCreate(timer, config)
+          onCreate={(timer, config, bot) => {
+            onCreate(timer, config, bot)
             setShowCreate(false)
           }}
         />

@@ -16,6 +16,8 @@ export interface Room {
   turnTimer: number
   gameState: GameState | null
   gameConfig: GameConfig
+  /** Set when player2 is a server-side bot. */
+  botDifficulty?: 'easy' | 'hard'
 }
 
 /**

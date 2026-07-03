@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { GAME_EVENTS } from '@towers/shared'
 import type { GameConfig, GameStartPayload } from '@towers/shared'
 import { socket } from './socket'
@@ -9,42 +10,47 @@ import { useLobby } from './hooks/useLobby'
 import { AuthScreen } from './components/AuthScreen'
 import { HomePage } from './pages/HomePage'
 import { GamePage } from './pages/GamePage'
-
-type Screen = 'home' | 'game'
+import { ProfilePage } from './pages/ProfilePage'
+import { MatchPage } from './pages/MatchPage'
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home')
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  )
+}
+
+function AppRoutes() {
+  const navigate = useNavigate()
 
   const { user: pbUser, token: pbToken, loading: authLoading, error: authError, login, register, logout, clearError } = usePbAuth()
 
-  // username comes from the PocketBase user record
   const username = (pbUser as any)?.username ?? ''
 
-  // Socket connects only after a valid PB token is available
   const { connected } = useSocket(pbToken)
 
   const { gameState, gameOver, opponentDisconnected, pendingDrawDiscard, playCard, discardCard, sendDrawDiscardChoice, resetGame } = useGameState()
   const { rooms, currentRoom, error, listRooms, createRoom, joinRoom, leaveRoom, clearError: clearLobbyError } = useLobby()
 
-  // Listen for gameStart to switch screens
   useEffect(() => {
     function onGameStart(_payload: GameStartPayload) {
-      setScreen('game')
+      navigate('/game')
     }
     socket.on(GAME_EVENTS.GAME_START, onGameStart)
     return () => {
       socket.off(GAME_EVENTS.GAME_START, onGameStart)
     }
-  }, [])
+  }, [navigate])
 
   const handleBackToLobby = useCallback(() => {
     if (currentRoom) leaveRoom(currentRoom.id)
     resetGame()
-    setScreen('home')
-  }, [currentRoom, leaveRoom, resetGame])
+    navigate('/')
+  }, [currentRoom, leaveRoom, resetGame, navigate])
 
-  const handleCreate = useCallback((turnTimer: number, gameConfig: GameConfig) => {
-    createRoom(turnTimer, username, gameConfig)
+  const handleCreate = useCallback((turnTimer: number, gameConfig: GameConfig, bot?: 'easy' | 'hard') => {
+    createRoom(turnTimer, username, gameConfig, bot)
   }, [createRoom, username])
 
   const handleJoin = useCallback((roomId: string) => {
@@ -55,25 +61,35 @@ export default function App() {
   const handleLogout = useCallback(() => {
     if (currentRoom) leaveRoom(currentRoom.id)
     resetGame()
-    setScreen('home')
+    navigate('/')
     socket.disconnect()
     logout()
-  }, [currentRoom, leaveRoom, resetGame, logout])
+  }, [currentRoom, leaveRoom, resetGame, logout, navigate])
 
-  // Auth screen — shown when not logged in
+  // Public routes (profile + match) work logged-out — render before auth gate.
+  // We allow these to short-circuit even when pbUser is null.
+
   if (!pbUser) {
     return (
-      <AuthScreen
-        onLogin={login}
-        onRegister={register}
-        loading={authLoading}
-        error={authError}
-        onClearError={clearError}
-      />
+      <Routes>
+        <Route path="/profile/:username" element={<ProfilePage selfUsername={null} />} />
+        <Route path="/match/:id" element={<MatchPage />} />
+        <Route
+          path="*"
+          element={
+            <AuthScreen
+              onLogin={login}
+              onRegister={register}
+              loading={authLoading}
+              error={authError}
+              onClearError={clearError}
+            />
+          }
+        />
+      </Routes>
     )
   }
 
-  // Waiting for socket to connect
   if (!connected) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-900">
@@ -82,35 +98,48 @@ export default function App() {
     )
   }
 
-  // Game screen
-  if (screen === 'game' && gameState) {
-    return (
-      <GamePage
-        gameState={gameState}
-        gameOver={gameOver}
-        opponentDisconnected={opponentDisconnected}
-        onPlayCard={playCard}
-        onDiscardCard={discardCard}
-        onDrawDiscardChoice={sendDrawDiscardChoice}
-        pendingDrawDiscard={pendingDrawDiscard}
-        onBackToLobby={handleBackToLobby}
-        turnTimer={currentRoom?.turnTimer ?? 0}
-      />
-    )
-  }
-
-  // Home / lobby screen
   return (
-    <HomePage
-      rooms={rooms}
-      onRefresh={listRooms}
-      onJoin={handleJoin}
-      onCreate={handleCreate}
-      onLeaveRoom={leaveRoom}
-      currentRoom={currentRoom}
-      error={error}
-      username={username}
-      onLogout={handleLogout}
-    />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <HomePage
+            rooms={rooms}
+            onRefresh={listRooms}
+            onJoin={handleJoin}
+            onCreate={handleCreate}
+            onLeaveRoom={leaveRoom}
+            currentRoom={currentRoom}
+            error={error}
+            username={username}
+            onLogout={handleLogout}
+          />
+        }
+      />
+      <Route
+        path="/game"
+        element={
+          gameState ? (
+            <GamePage
+              gameState={gameState}
+              gameOver={gameOver}
+              opponentDisconnected={opponentDisconnected}
+              onPlayCard={playCard}
+              onDiscardCard={discardCard}
+              onDrawDiscardChoice={sendDrawDiscardChoice}
+              pendingDrawDiscard={pendingDrawDiscard}
+              onBackToLobby={handleBackToLobby}
+              turnTimer={currentRoom?.turnTimer ?? 0}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      <Route path="/profile" element={<Navigate to={`/profile/${username}`} replace />} />
+      <Route path="/profile/:username" element={<ProfilePage selfUsername={username} />} />
+      <Route path="/match/:id" element={<MatchPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

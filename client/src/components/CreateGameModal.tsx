@@ -9,8 +9,10 @@ import {
 
 interface CreateGameModalProps {
   onClose: () => void
-  onCreate: (turnTimer: number, gameConfig: GameConfig) => void
+  onCreate: (turnTimer: number, gameConfig: GameConfig, bot?: 'easy' | 'hard') => void
 }
+
+type GameMode = 'quick' | 'bot-easy' | 'bot-hard'
 
 function defaultConfig(): GameConfig {
   return {
@@ -51,11 +53,12 @@ function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
 }
 
 export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
-  const [gameMode, setGameMode] = useState<'quick'>('quick')
+  const [gameMode, setGameMode] = useState<GameMode>('quick')
   const [config, setConfig] = useState<GameConfig>(defaultConfig)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const turnTimer = gameMode === 'quick' ? 20 : 20
+  const turnTimer = 20
+  const bot = gameMode === 'bot-easy' ? 'easy' : gameMode === 'bot-hard' ? 'hard' : undefined
 
   function set<K extends keyof GameConfig>(key: K, value: GameConfig[K]) {
     setConfig((c) => ({ ...c, [key]: value }))
@@ -63,7 +66,7 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onCreate(turnTimer, config)
+    onCreate(turnTimer, config, bot)
   }
 
   function handleReset() {
@@ -83,11 +86,13 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
           <span className="text-sm text-stone-400">Game Mode</span>
           <select
             value={gameMode}
-            onChange={(e) => setGameMode(e.target.value as 'quick')}
+            onChange={(e) => setGameMode(e.target.value as GameMode)}
             className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 outline-none focus:border-amber-500"
             autoFocus
           >
             <option value="quick">Quick Game</option>
+            <option value="bot-easy">Vs Computer (Easy)</option>
+            <option value="bot-hard">Vs Computer (Hard)</option>
             <option value="ranked" disabled>Ranked Game (Coming Soon)</option>
           </select>
         </label>

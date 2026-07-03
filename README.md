@@ -53,7 +53,12 @@ towers/
 | `src/turnManager.ts` | Turn flow, timers, resource generation, history/timer helpers |
 | `src/gameState.ts` | Create games, project client-safe state |
 | `src/roomManager.ts` | In-memory room CRUD |
-| `src/handlers/lobbyHandlers.ts` | Create/join/list room events, disconnect/forfeit, turn timeout |
+| `src/bot/evaluate.ts` | Heuristic state evaluation shared by both bots |
+| `src/bot/simulate.ts` | Pure action enumeration + turn-flow simulation |
+| `src/bot/greedy.ts` | Easy bot: best one-ply move by evaluation |
+| `src/bot/hardSearch.ts` | Hard bot: greedy plus provable same-turn forced-win chains |
+| `src/bot/botRunner.ts` | Schedules and executes bot turns in live rooms |
+| `src/handlers/lobbyHandlers.ts` | Create/join/list room events, disconnect/forfeit, turn timeout, bot rooms |
 | `src/handlers/gameHandlers.ts` | Play card, discard, draw-discard choice |
 | `src/handlers/emit.ts` | Shared helpers to broadcast state/game-over to both players |
 
@@ -89,7 +94,7 @@ Build and push both images from the monorepo root:
 # client
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-client:v1.2 \
+  -t bevdev1/towers-client:v1.4 \
   -f client/Dockerfile \
   . \
   --push
@@ -97,7 +102,7 @@ docker buildx build \
 # server
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-server:v1.2 \
+  -t bevdev1/towers-server:v1.4 \
   -f server/Dockerfile \
   . \
   --push
@@ -152,3 +157,10 @@ npx vite build
 ## Game Rules
 
 See [gameRules.md](gameRules.md) for a full breakdown of game mechanics, card types, and win conditions.
+
+
+## Apply changes to the Pocketbase schema
+kubectl delete job -n towers pocketbase-setup
+kubectl apply -f k8s/pocketbase/setup-configmap.yaml
+kubectl apply -f k8s/pocketbase/setup-job.yaml
+kubectl logs -n towers -l job-name=pocketbase-setup -f

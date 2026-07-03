@@ -8,6 +8,7 @@ import { createGame, defaultGameConfig, getClientState } from '../gameState.js'
 import { logger } from '../logger.js'
 import { emitGameOverToBoth, emitGameStateToBoth, emitToBothPlayers } from './emit.js'
 import { checkWin } from '../winChecker.js'
+import { createBotSlot, isBotId, maybeScheduleBotTurn } from '../bot/botRunner.js'
 
 const GameConfigSchema = z.object({
   seed: z.string().max(64).default(''),
@@ -20,12 +21,12 @@ const GameConfigSchema = z.object({
   tower: z.number().int().min(1).max(200),
   wall: z.number().int().min(0).max(200),
 })
-import { recordGameResult } from '../statsRecorder.js'
 
 const CreateRoomSchema = z.object({
   turnTimer: z.number().int().min(15).max(30),
   username: z.string().min(1).max(20),
   gameConfig: GameConfigSchema.optional(),
+  bot: z.enum(['easy', 'hard']).optional(),
 })
 
 const JoinRoomSchema = z.object({
@@ -57,7 +58,7 @@ export function registerLobbyHandlers(
       return
     }
 
-    const { turnTimer, username, gameConfig: rawConfig } = parsed.data
+    const { turnTimer, username, gameConfig: rawConfig, bot } = parsed.data
     const playerId = socket.data.playerId as string
     const gameConfig: GameConfig = rawConfig ?? defaultGameConfig()
 
@@ -73,16 +74,26 @@ export function registerLobbyHandlers(
 
     logger.info({ roomId: room.id, playerId }, 'Room created')
 
+    // A bot game starts immediately — seat the bot as player2
+    if (bot) {
+      room.player2 = createBotSlot(bot)
+      room.botDifficulty = bot
+    }
+
     socket.emit(LOBBY_EVENTS.ROOM_CREATED, {
       room: {
         id: room.id,
         name: room.name,
         player1: { playerId, username },
-        player2: null,
+        player2: room.player2 ? { playerId: room.player2.playerId, username: room.player2.username } : null,
         turnTimer: room.turnTimer,
         gameConfig: room.gameConfig,
       },
     })
+
+    if (bot) {
+      startGame(io, room, roomManager, turnManager)
+    }
 
     // Broadcast updated room list to everyone
     io.emit(LOBBY_EVENTS.ROOM_LIST, { rooms: roomManager.listOpenRooms() })
@@ -131,36 +142,7 @@ export function registerLobbyHandlers(
 
     // Both players are now in the room — start the game
     if (room.player1 && room.player2) {
-      const gameState = createGame(
-        room.player1.playerId,
-        room.player1.username,
-        room.player2.playerId,
-        room.player2.username,
-        room.turnTimer,
-        room.gameConfig,
-      )
-      room.gameState = gameState
-
-      // Generate resources for first player's first turn
-      room.gameState = turnManager.generateResources(room.gameState)
-
-      // Emit game state to each player (personalised view)
-      const p1Socket = room.player1.socketId
-      const p2Socket = room.player2.socketId
-
-      io.to(p1Socket).emit(GAME_EVENTS.GAME_START, {
-        gameState: getClientState(room.gameState, room.player1.playerId),
-      })
-      io.to(p2Socket).emit(GAME_EVENTS.GAME_START, {
-        gameState: getClientState(room.gameState, room.player2.playerId),
-      })
-
-      // Start first turn timer
-      turnManager.startTurn(room.id, room.gameState, () => {
-        handleTurnTimeout(io, room.id, roomManager, turnManager)
-      })
-
-      logger.info({ roomId: room.id }, 'Game started')
+      startGame(io, room, roomManager, turnManager)
     }
 
     // Broadcast updated room list
@@ -219,6 +201,44 @@ export function registerLobbyHandlers(
   })
 }
 
+/** Create the game state for a full room, notify both players, and start the first turn. */
+function startGame(
+  io: Server,
+  room: Room,
+  roomManager: RoomManager,
+  turnManager: TurnManager,
+): void {
+  if (!room.player1 || !room.player2) return
+
+  const gameState = createGame(
+    room.player1.playerId,
+    room.player1.username,
+    room.player2.playerId,
+    room.player2.username,
+    room.turnTimer,
+    room.gameConfig,
+  )
+
+  // Generate resources for first player's first turn
+  room.gameState = turnManager.generateResources(gameState)
+
+  // Emit game state to each player (personalised view)
+  io.to(room.player1.socketId).emit(GAME_EVENTS.GAME_START, {
+    gameState: getClientState(room.gameState, room.player1.playerId),
+  })
+  io.to(room.player2.socketId).emit(GAME_EVENTS.GAME_START, {
+    gameState: getClientState(room.gameState, room.player2.playerId),
+  })
+
+  // Start first turn timer
+  turnManager.startTurn(room.id, room.gameState, () => {
+    handleTurnTimeout(io, room.id, roomManager, turnManager)
+  })
+  maybeScheduleBotTurn(io, room.id, roomManager, turnManager)
+
+  logger.info({ roomId: room.id, bot: room.botDifficulty }, 'Game started')
+}
+
 /** Handle a player leaving a room (voluntary or disconnect). */
 function handlePlayerLeave(
   io: Server,
@@ -243,13 +263,7 @@ function handlePlayerLeave(
         winReason: 'forfeit',
       }
 
-      io.to(opponent.socketId).emit(GAME_EVENTS.GAME_OVER, {
-        winner: opponent.playerId,
-        winReason: 'forfeit',
-        finalState: getClientState(room.gameState, opponent.playerId),
-      })
-
-      recordGameResult(room.gameState, pbUserIdsFromRoom(room))
+      emitGameOverToBoth(io, room, opponent.playerId, 'forfeit')
     }
 
     turnManager.cleanup(roomId)
@@ -258,6 +272,18 @@ function handlePlayerLeave(
   socket.leave(roomId)
   socket.data.roomId = undefined
   roomManager.leaveRoom(roomId, playerId)
+
+  // A bot can't hold a room open — delete the room once no humans remain
+  const remaining = roomManager.getRoom(roomId)
+  if (remaining) {
+    const humans = [remaining.player1, remaining.player2].filter(
+      (p) => p && !isBotId(p.playerId),
+    )
+    if (humans.length === 0) {
+      turnManager.cleanup(roomId)
+      roomManager.deleteRoom(roomId)
+    }
+  }
 
   logger.info({ roomId, playerId }, 'Player left room')
 
@@ -291,7 +317,6 @@ export function handleTurnTimeout(
 
     turnManager.cleanup(roomId)
     emitGameOverToBoth(io, room, winnerId, 'afk')
-    recordGameResult(room.gameState, pbUserIdsFromRoom(room))
     logger.info({ roomId, winnerId }, 'Game ended by AFK forfeit')
     return
   }
@@ -338,6 +363,7 @@ export function handleTurnTimeout(
     turnManager.startTurn(roomId, room.gameState, () => {
       handleTurnTimeout(io, roomId, roomManager, turnManager)
     })
+    maybeScheduleBotTurn(io, roomId, roomManager, turnManager)
     return
   }
 
@@ -374,6 +400,7 @@ export function handleTurnTimeout(
     turnManager.startTurn(roomId, room.gameState, () => {
       handleTurnTimeout(io, roomId, roomManager, turnManager)
     })
+    maybeScheduleBotTurn(io, roomId, roomManager, turnManager)
   } catch (err) {
     logger.error({ roomId, err }, 'Error during turn timeout')
   }
@@ -383,12 +410,5 @@ function getOpponent(room: Room, playerId: string) {
   if (room.player1?.playerId === playerId) return room.player2
   if (room.player2?.playerId === playerId) return room.player1
   return null
-}
-
-function pbUserIdsFromRoom(room: Room): Record<string, string> {
-  const ids: Record<string, string> = {}
-  if (room.player1?.pbUserId) ids[room.player1.playerId] = room.player1.pbUserId
-  if (room.player2?.pbUserId) ids[room.player2.playerId] = room.player2.pbUserId
-  return ids
 }
 

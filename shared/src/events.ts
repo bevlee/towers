@@ -33,6 +33,8 @@ export interface CreateRoomPayload {
   name: string
   turnTimer: number
   username: string
+  /** When set, the room is filled with a server-side bot and starts immediately. */
+  bot?: 'easy' | 'hard'
 }
 
 export interface JoinRoomPayload {
