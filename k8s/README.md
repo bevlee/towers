@@ -2,6 +2,10 @@
 
 Deploys Two Towers to a Kubernetes cluster behind Traefik with a wildcard TLS cert.
 
+A parallel dev environment (namespace `towers-dev`, `towers-dev.bevsoft.com`, `:dev`
+image tags, its own PocketBase) lives in `../k8s-dev/` — see its README. If you change
+manifests here, mirror the change there.
+
 ## Files
 
 | File | Purpose |

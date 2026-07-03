@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pocketbase-ingress
+  namespace: towers-dev
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - pbtowers-dev.bevsoft.com
+      secretName: bevsoft-wildcard-tls
+  rules:
+    - host: pbtowers-dev.bevsoft.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pocketbase
+                port:
+                  number: 8090

@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: towers-ingress
+  namespace: towers-dev
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - towers-dev.bevsoft.com
+      secretName: bevsoft-wildcard-tls
+  rules:
+    - host: towers-dev.bevsoft.com
+      http:
+        paths:
+          - path: /socket.io/
+            pathType: Prefix
+            backend:
+              service:
+                name: gameserver
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
