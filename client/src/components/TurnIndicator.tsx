@@ -20,7 +20,12 @@ export function TurnIndicator({ isYourTurn, turnTimer, timerKey }: TurnIndicator
       >
         {isYourTurn ? 'Your Turn' : "Opponent's Turn"}
       </div>
-      <div className={`text-lg font-bold tabular-nums ${urgent ? 'text-red-400' : 'text-stone-300'}`}>
+      <div
+        className={`text-lg font-bold tabular-nums ${urgent ? 'text-red-400' : 'text-stone-300'}`}
+        aria-live="polite"
+        aria-atomic="true"
+        role="timer"
+      >
         {turnTime}s
       </div>
     </div>

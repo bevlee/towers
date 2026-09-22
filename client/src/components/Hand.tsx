@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { CardInstance } from '@towers/shared'
 import { CARD_MAP } from '@towers/shared'
 import type { PlayerState } from '@towers/shared'
@@ -37,6 +37,32 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
     prevCardIds.current = currentIds
   }, [hand])
 
+  const handleCardAction = useCallback((cardId: string, action: 'play' | 'discard') => {
+    if (pendingDrawDiscard) {
+      onDrawDiscardChoice?.(cardId)
+    } else if (action === 'play') {
+      onPlay(cardId)
+    } else {
+      onDiscard(cardId)
+    }
+  }, [pendingDrawDiscard, onDrawDiscardChoice, onPlay, onDiscard])
+
+  const handItems = useMemo(() => hand.map((card) => {
+    const def = CARD_MAP[card.cardName]
+    if (!def) return null
+
+    const resource = getResourceForColor(def.color)
+    const playable = !pendingDrawDiscard && player[resource] >= def.cost
+    const isNew = newCardIds.current.has(card.id)
+
+    return {
+      card,
+      def,
+      playable,
+      isNew,
+    }
+  }).filter(Boolean), [hand, pendingDrawDiscard, player])
+
   return (
     <div>
       {pendingDrawDiscard && (
@@ -50,21 +76,9 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
         </div>
       )}
       <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-2 sm:gap-y-0 sm:px-4 sm:py-3">
-        {hand.map((card) => {
-          const def = CARD_MAP[card.cardName]
-          if (!def) return null
-
-          const resource = getResourceForColor(def.color)
-          const playable = !pendingDrawDiscard && player[resource] >= def.cost
-          const isNew = newCardIds.current.has(card.id)
-
-          const handlePlay = pendingDrawDiscard
-            ? () => onDrawDiscardChoice?.(card.id)
-            : () => onPlay(card.id)
-
-          const handleDiscard = pendingDrawDiscard
-            ? () => onDrawDiscardChoice?.(card.id)
-            : () => onDiscard(card.id)
+        {handItems.map((item) => {
+          if (!item) return null
+          const { card, def, playable, isNew } = item
 
           return (
             <div
@@ -83,8 +97,8 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
                 playable={playable}
                 isYourTurn={isYourTurn || pendingDrawDiscard}
                 canDiscard={pendingDrawDiscard ? true : def.canDiscard !== false}
-                onPlay={handlePlay}
-                onDiscard={handleDiscard}
+                onPlay={() => handleCardAction(card.id, 'play')}
+                onDiscard={() => handleCardAction(card.id, 'discard')}
               />
             </div>
           )

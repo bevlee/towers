@@ -59,6 +59,7 @@ export function Card({
   const handlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'touch') return
     clearLongPressTimer()
+    longPressRef.current = false
     if (showPreview) {
       setShowPreview(false)
     }
@@ -75,16 +76,25 @@ export function Card({
   return (
     <>
       <div
+        role="button"
+        tabIndex={canAct ? 0 : -1}
         className={`
           flex-shrink-0 cursor-pointer touch-manipulation transition-transform
           ${canPlay ? 'hover:scale-105 hover:-translate-y-2' : 'opacity-60'}
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 focus-visible:outline-offset-2 rounded
         `}
         onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onPointerLeave={handlePointerEnd}
-        title={canPlay ? 'Click to play' : isYourTurn ? 'Not enough resources' : "Not your turn"}
+        aria-label={`${cardName}, costs ${cost}. ${canPlay ? 'Click to play' : isYourTurn ? 'Not enough resources' : "Not your turn"}`}
       >
         <CardFace
           cardName={cardName}
@@ -99,6 +109,7 @@ export function Card({
                   e.stopPropagation()
                   onDiscard()
                 }}
+                aria-label={`Discard ${cardName}`}
                 title="Discard"
               >
                 -

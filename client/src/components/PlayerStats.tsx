@@ -98,7 +98,7 @@ export function PlayerStats({ player, side }: PlayerStatsProps) {
 
   return (
     <div className={`@container flex w-20 flex-col gap-1 sm:w-40 sm:gap-2 ${align}`}>
-      <div className="mb-1 hidden truncate text-sm font-bold text-amber-200 sm:block">
+      <div className="mb-1 truncate text-[10px] font-bold text-amber-200 sm:text-sm">
         {player.username}
       </div>
       <ResourceRow

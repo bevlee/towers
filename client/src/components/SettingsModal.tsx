@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { WIN_TOWER, WIN_RESOURCES, HAND_SIZE, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
 import { useArtStyle, setArtStyle } from '../hooks/useArtStyle'
 
@@ -8,13 +9,28 @@ interface SettingsModalProps {
 
 export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
   const artStyle = useArtStyle()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
       <div
         className="flex w-full max-w-xs flex-col gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center text-xl font-bold text-amber-400">Game Settings</h2>
+        <h2 id="settings-title" className="text-center text-xl font-bold text-amber-400">Game Info</h2>
 
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">

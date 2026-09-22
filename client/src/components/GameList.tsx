@@ -16,7 +16,7 @@ export function GameList({ rooms, onJoin, currentRoom }: GameListProps) {
   }
 
   return (
-    <table className="w-full border-collapse">
+    <table className="w-full border-collapse" aria-label="Open games">
       <thead>
         <tr className="border-b border-stone-700 text-left text-sm text-stone-400">
           <th className="px-4 py-2">Host</th>

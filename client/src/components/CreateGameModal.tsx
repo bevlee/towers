@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { GameConfig } from '@towers/shared'
 import {
   STARTING_RESOURCES,
@@ -52,12 +52,21 @@ function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
   )
 }
 
+const TURN_TIMER_OPTIONS = [15, 20, 30] as const
+
 export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
   const [gameMode, setGameMode] = useState<GameMode>('quick')
   const [config, setConfig] = useState<GameConfig>(defaultConfig)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [turnTimer, setTurnTimer] = useState(20)
 
-  const turnTimer = 20
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
   const bot = gameMode === 'bot-easy' ? 'easy' : gameMode === 'bot-hard' ? 'hard' : undefined
 
   function set<K extends keyof GameConfig>(key: K, value: GameConfig[K]) {
@@ -74,12 +83,19 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-game-title"
+    >
       <form
+        onClick={(e) => e.stopPropagation()}
         className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-xl border border-stone-600 bg-stone-800 px-5 py-6 shadow-2xl sm:px-8"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-xl font-bold text-amber-200">Create a Challenge</h2>
+        <h2 id="create-game-title" className="text-xl font-bold text-amber-200">Create a Challenge</h2>
 
         {/* Game Mode */}
         <label className="flex flex-col gap-1">
@@ -95,6 +111,27 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
             <option value="bot-hard">Vs Computer (Hard)</option>
             <option value="ranked" disabled>Ranked Game (Coming Soon)</option>
           </select>
+        </label>
+
+        {/* Turn Timer */}
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-stone-400">Turn Timer</span>
+          <div className="flex gap-2">
+            {TURN_TIMER_OPTIONS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTurnTimer(t)}
+                className={`flex-1 rounded px-3 py-2 text-sm font-bold ${
+                  turnTimer === t
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                }`}
+              >
+                {t}s
+              </button>
+            ))}
+          </div>
         </label>
 
         <hr className="border-stone-700" />

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ClientGameState } from '@towers/shared'
 import { PlayerStats } from '../components/PlayerStats'
 import { TowerVisual } from '../components/TowerVisual'
@@ -46,6 +46,12 @@ export function GamePage({
   const [historyOpen, setHistoryOpen] = useState(false)
   const dragging = useRef(false)
 
+  const cleanupDrag = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    return () => { cleanupDrag.current?.() }
+  }, [])
+
   const onDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragging.current = true
@@ -64,10 +70,12 @@ export function GamePage({
       dragging.current = false
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
+      cleanupDrag.current = null
     }
 
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
+    cleanupDrag.current = onMouseUp
   }, [historyHeight])
 
   const handleLeaveGame = useCallback(() => {
@@ -243,12 +251,19 @@ export function GamePage({
 
       {/* Leave game confirmation */}
       {showLeaveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowLeaveConfirm(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowLeaveConfirm(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowLeaveConfirm(false) }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="leave-confirm-title"
+        >
           <div
             className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold text-red-400">Leave Game?</h2>
+            <h2 id="leave-confirm-title" className="text-xl font-bold text-red-400">Leave Game?</h2>
             <p className="text-center text-sm text-stone-300">
               Leaving will forfeit the match.<br />
               Your opponent will win.

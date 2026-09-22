@@ -103,6 +103,7 @@ export function handleTurnTimeout(
       awaitingDrawDiscard: false,
     }
 
+    room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
     room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', cardToDiscard.cardName)
     room.gameState = turnManager.switchTurn(room.gameState)
 
@@ -113,7 +114,7 @@ export function handleTurnTimeout(
     return
   }
 
-  // Pick a random discardable card, or any card if none are discardable
+  // Pick a random discardable card; fall back to any card if none are discardable
   const discardableCards = currentPlayer.hand.filter((c) => {
     const def = CARD_MAP[c.cardName]
     return def?.canDiscard !== false
@@ -132,5 +133,19 @@ export function handleTurnTimeout(
     finishTurn(io, room, roomManager, turnManager)
   } catch (err) {
     logger.error({ roomId, err }, 'Error during turn timeout')
+    // Fallback: manually remove the card and advance the turn so the game doesn't hang
+    const cardIdx = currentPlayer.hand.findIndex((c) => c.id === randomCard.id)
+    if (cardIdx !== -1) {
+      const updatedPlayer = { ...currentPlayer, hand: [...currentPlayer.hand] }
+      updatedPlayer.hand.splice(cardIdx, 1)
+      const players = [...room.gameState.players] as typeof room.gameState.players
+      players[playerIndex] = updatedPlayer
+      room.gameState = { ...room.gameState, players, discardPile: [...room.gameState.discardPile, randomCard] }
+      room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
+      room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', randomCard.cardName)
+      room.gameState = turnManager.switchTurn(room.gameState)
+      emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, { discardedCardInstanceId: randomCard.id })
+      finishTurn(io, room, roomManager, turnManager)
+    }
   }
 }
