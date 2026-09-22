@@ -75,7 +75,7 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
           </span>
         </div>
       )}
-      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-2 sm:gap-y-0 sm:px-4 sm:py-3">
+      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-1.5 sm:gap-y-0 sm:px-3 sm:py-2 md:gap-x-2 md:px-4 md:py-3">
         {handItems.map((item) => {
           if (!item) return null
           const { card, def, playable, isNew } = item
