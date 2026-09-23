@@ -17,8 +17,11 @@ spec:
     spec:
       containers:
         - name: client
-          image: docker.io/bevdev1/towers-client:v1.4
-          imagePullPolicy: Always
+          # Bare artifact name so Skaffold / Kustomize supply the tag (see
+          # k8s/kustomization.yaml). A pinned tag here would drift from releases.
+          image: docker.io/bevdev1/towers-client
+          # Release tags are immutable, so there is no need to re-pull.
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           env:
@@ -43,8 +46,11 @@ spec:
               memory: 128Mi
 
         - name: server
-          image: docker.io/bevdev1/towers-server:v1.4
-          imagePullPolicy: Always
+          # Bare artifact name so Skaffold / Kustomize supply the tag (see
+          # k8s/kustomization.yaml). A pinned tag here would drift from releases.
+          image: docker.io/bevdev1/towers-server
+          # Release tags are immutable, so there is no need to re-pull.
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           env:

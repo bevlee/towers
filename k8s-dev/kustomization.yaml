@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# One entry point for both `kubectl apply -k k8s-dev` and Skaffold.
+#
+# pocketbase/secret.yaml is deliberately NOT listed: it holds placeholder
+# credentials, so applying it would overwrite the real admin login. Create the
+# secret by hand once (see k8s/README.md).
+#
+# pocketbase/setup-job.yaml is a Job, which Kubernetes never re-runs. Skaffold
+# deletes it before each deploy (skaffold.yaml deploy hook) so the idempotent
+# schema setup runs on every release; with plain `kubectl apply -k`, delete
+# the Job first yourself.
+resources:
+  - namespace.yaml
+  - pocketbase/setup-configmap.yaml
+  - pocketbase/service.yaml
+  - pocketbase/statefulset.yaml
+  - pocketbase/ingress.yaml
+  - pocketbase/setup-job.yaml
+  - service.yaml
+  - deployment.yaml
+  - certificate.yaml
+  - ingress.yaml
+
+# `kubectl apply -k k8s-dev` deploys the same tag as `skaffold run -p dev`.
+images:
+  - name: docker.io/bevdev1/towers-client
+    newTag: dev
+  - name: docker.io/bevdev1/towers-server
+    newTag: dev

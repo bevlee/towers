@@ -1,0 +1,55 @@
+apiVersion: skaffold/v4beta14
+kind: Config
+metadata:
+  name: towers
+build:
+  # Keep release deployments on an explicit, human-readable image version
+  # instead of Skaffold's default Git-derived tag. Bump this together with
+  # the newTag values in k8s/kustomization.yaml.
+  tagPolicy:
+    envTemplate:
+      template: "v1.5"
+  # OKE runs ARM64 nodes; publish a multi-arch image so either arch can pull it.
+  platforms: ["linux/amd64", "linux/arm64"]
+  artifacts:
+    # Both Dockerfiles copy shared/, so the build context is the repo root.
+    - image: docker.io/bevdev1/towers-client
+      context: .
+      docker:
+        dockerfile: client/Dockerfile
+    - image: docker.io/bevdev1/towers-server
+      context: .
+      docker:
+        dockerfile: server/Dockerfile
+  local:
+    push: true
+    useBuildkit: true
+deploy:
+  kubectl:
+    defaultNamespace: towers
+    hooks:
+      before:
+        # Jobs never re-run once complete; delete the PocketBase setup Job so the
+        # (idempotent) schema setup runs again on every deploy.
+        - host:
+            command: ["kubectl", "delete", "job", "pocketbase-setup", "-n", "towers", "--ignore-not-found"]
+manifests:
+  kustomize:
+    paths:
+      - k8s
+profiles:
+  # `skaffold run -p dev` builds :dev images and deploys k8s-dev/ to towers-dev.
+  - name: dev
+    patches:
+      - op: replace
+        path: /build/tagPolicy/envTemplate/template
+        value: dev
+      - op: replace
+        path: /manifests/kustomize/paths/0
+        value: k8s-dev
+      - op: replace
+        path: /deploy/kubectl/defaultNamespace
+        value: towers-dev
+      - op: replace
+        path: /deploy/kubectl/hooks/before/0/host/command/5
+        value: towers-dev

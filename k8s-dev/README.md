@@ -12,8 +12,19 @@ prod or setting up PocketBase locally.
 | images `:vX.Y` | images `:dev` |
 
 These manifests are copies of `k8s/` with namespace, hostnames, and image tags changed.
-If you change something in `k8s/`, mirror it here. The PocketBase setup-script ConfigMap
-is *not* duplicated — it's applied from the prod file with the namespace swapped (see below).
+If you change something in `k8s/` (including `pocketbase/setup-configmap.yaml`), mirror it here.
+
+## Deploy with Skaffold
+
+```bash
+skaffold run -p dev
+kubectl -n towers-dev rollout status deployment/towers --timeout=5m
+```
+
+The `dev` profile builds and pushes `:dev` images and deploys `k8s-dev/kustomization.yaml`
+to `towers-dev`, re-running the PocketBase setup Job like the prod deploy. The PocketBase
+admin secret is not in the Kustomization — create it once (see First-time setup). The
+manual steps below still work without Skaffold.
 
 DNS: `*.bevsoft.com` must resolve to the cluster's load balancer for the new hostnames
 to work. If you use individual DNS records instead of a wildcard, add records for
@@ -59,9 +70,7 @@ kubectl apply -f k8s-dev/pocketbase/statefulset.yaml
 kubectl apply -f k8s-dev/pocketbase/service.yaml
 kubectl apply -f k8s-dev/pocketbase/ingress.yaml
 
-# Setup script ConfigMap — reused from prod with the namespace swapped
-sed 's/^  namespace: towers$/  namespace: towers-dev/' k8s/pocketbase/setup-configmap.yaml | \
-  kubectl apply -f -
+kubectl apply -f k8s-dev/pocketbase/setup-configmap.yaml
 kubectl apply -f k8s-dev/pocketbase/setup-job.yaml
 
 # App
@@ -77,14 +86,13 @@ kubectl apply -f k8s-dev/ingress.yaml
 kubectl rollout restart deployment/towers -n towers-dev
 
 # If manifests changed
-kubectl apply -f k8s-dev/deployment.yaml
+kubectl apply -k k8s-dev
 ```
 
 Re-run the PocketBase setup job after schema changes:
 
 ```bash
-sed 's/^  namespace: towers$/  namespace: towers-dev/' k8s/pocketbase/setup-configmap.yaml | \
-  kubectl apply -f -
+kubectl apply -f k8s-dev/pocketbase/setup-configmap.yaml
 kubectl delete job pocketbase-setup -n towers-dev --ignore-not-found
 kubectl apply -f k8s-dev/pocketbase/setup-job.yaml
 ```

@@ -15,60 +15,57 @@ manifests here, mirror the change there.
 | `service.yaml` | ClusterIP services: `nginx` (port 80) and `gameserver` (port 3000) |
 | `ingress.yaml` | Traefik ingress for `towers.bevsoft.com` with TLS; routes `/socket.io/` to `gameserver`, everything else to `nginx` |
 | `certificate.yaml` | cert-manager Certificate for `*.bevsoft.com` (creates `bevsoft-wildcard-tls`) |
+| `kustomization.yaml` | Entry point for `kubectl apply -k k8s` and Skaffold; pins the release image tag |
+| `pocketbase/` | PocketBase StatefulSet, service, ingress, and the schema setup Job + script |
 
 Both containers run in the same pod, so the server is reachable at `127.0.0.1:3000` from the nginx container (see `GAMESERVER_HOST` / `GAMESERVER_PORT` env vars).
 
-## Prerequisites
+## Deploy with Skaffold
 
-- Docker buildx: `docker buildx create --use` (once only)
-- Logged in to Docker Hub: `docker login`
-- kubectl pointing at the target cluster
-- cert-manager installed in the cluster (for `certificate.yaml`)
-- Traefik installed as the ingress controller
+`skaffold.yaml` (repo root) builds both images for `linux/amd64` and `linux/arm64`
+(OKE runs ARM64 hosts), tags them with the release version, pushes them to Docker Hub,
+and deploys `k8s/` through its Kustomize entry point, `k8s/kustomization.yaml`.
 
-## Build and push images
-
-OKE runs ARM64 hosts — images must target both `linux/arm64` and `linux/amd64`.
-
-From the `towers/` directory:
+Prerequisites: `skaffold` v2, `kubectl` pointing at the cluster, `docker login` to
+Docker Hub, Docker with buildx, cert-manager and Traefik in the cluster.
 
 ```bash
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-client:v1.0 \
-  -f client/Dockerfile \
-  . \
-  --push
-
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-server:v1.0 \
-  -f server/Dockerfile \
-  . \
-  --push
+skaffold run
+kubectl -n towers rollout status deployment/towers --timeout=5m
 ```
 
-If you bump the tag, update `deployment.yaml` to match.
+Every deploy also re-runs the PocketBase schema setup: a Skaffold `before` hook deletes
+the `pocketbase-setup` Job so the re-applied one runs again (the script is idempotent).
 
-## Apply manifests
+### Cutting a new version
+
+Release tags are immutable (`imagePullPolicy: IfNotPresent`), so bump the version for
+every release, in both places:
+
+1. `skaffold.yaml` → `build.tagPolicy.envTemplate.template`
+2. `k8s/kustomization.yaml` → `images[].newTag` (both images)
+
+Commit, tag the commit (`git tag vX.Y && git push origin vX.Y`), then `skaffold run`.
+Rolling back is `kubectl apply -k k8s` from the previous tag's checkout.
+
+### First install
+
+The PocketBase admin secret is not part of the Kustomization (its values are
+placeholders). Create it once before the first deploy:
 
 ```bash
-# First time only
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/certificate.yaml   # skip if bevsoft-wildcard-tls already exists
-
-# Every deploy
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/ingress.yaml
+kubectl -n towers create secret generic pocketbase-admin \
+  --from-literal=email=ADMIN_EMAIL --from-literal=password=ADMIN_PASSWORD
 ```
 
-### Force a re-pull of the current image tag
+### Without Skaffold
 
-The deployment sets `imagePullPolicy: Always`, so pods always pull on start — but Kubernetes won't recreate pods if nothing in the spec changed. To pull fresh images without bumping the tag:
+After the images for the tag in `k8s/kustomization.yaml` have been pushed:
 
 ```bash
-kubectl rollout restart deployment/towers -n towers
+kubectl -n towers delete job pocketbase-setup --ignore-not-found
+kubectl apply -k k8s
 ```
 
 ## Verify

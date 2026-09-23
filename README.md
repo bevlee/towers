@@ -159,8 +159,18 @@ npx vite build
 See [gameRules.md](gameRules.md) for a full breakdown of game mechanics, card types, and win conditions.
 
 
-## Apply changes to the Pocketbase schema
+## Deployment
+
+`skaffold run` builds, tags, pushes and deploys a release to the `towers` namespace;
+`skaffold run -p dev` does the same for `towers-dev`. Each deploy also re-runs the
+PocketBase schema setup. See [k8s/README.md](k8s/README.md) for prerequisites and how to
+cut a new version.
+
+To re-run only the PocketBase schema setup:
+
+```bash
 kubectl delete job -n towers pocketbase-setup
 kubectl apply -f k8s/pocketbase/setup-configmap.yaml
 kubectl apply -f k8s/pocketbase/setup-job.yaml
 kubectl logs -n towers -l job-name=pocketbase-setup -f
+```
