@@ -22,9 +22,8 @@ export function TurnIndicator({ isYourTurn, turnTimer, timerKey }: TurnIndicator
       </div>
       <div
         className={`text-lg font-bold tabular-nums ${urgent ? 'text-red-400' : 'text-stone-300'}`}
-        aria-live="polite"
-        aria-atomic="true"
         role="timer"
+        aria-label={`${turnTime} seconds left`}
       >
         {turnTime}s
       </div>

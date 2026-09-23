@@ -11,6 +11,8 @@ interface CardProps {
   playable: boolean
   isYourTurn: boolean
   canDiscard: boolean
+  /** Draw-discard phase: activating the card discards it instead of playing it. */
+  discardMode?: boolean
   onPlay: () => void
   onDiscard: () => void
 }
@@ -23,11 +25,15 @@ export function Card({
   playable,
   isYourTurn,
   canDiscard,
+  discardMode = false,
   onPlay,
   onDiscard,
 }: CardProps) {
   const canPlay = playable && isYourTurn
   const canAct = isYourTurn
+  const status = discardMode
+    ? (canPlay ? 'Press to discard' : 'Cannot be discarded')
+    : canPlay ? 'Press to play' : isYourTurn ? 'Not enough resources' : 'Not your turn'
 
   const [showPreview, setShowPreview] = useState(false)
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -49,6 +55,7 @@ export function Card({
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'touch') return
     clearLongPressTimer()
+    longPressRef.current = false
     longPressTimerRef.current = setTimeout(() => {
       longPressRef.current = true
       setShowPreview(true)
@@ -59,7 +66,6 @@ export function Card({
   const handlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'touch') return
     clearLongPressTimer()
-    longPressRef.current = false
     if (showPreview) {
       setShowPreview(false)
     }
@@ -75,50 +81,55 @@ export function Card({
 
   return (
     <>
+      {/* Wrapper holds the pointer handlers and hover lift; the discard button is a
+          sibling of the role="button" card rather than nested inside it. */}
       <div
-        role="button"
-        tabIndex={canAct ? 0 : -1}
         className={`
-          flex-shrink-0 cursor-pointer touch-manipulation transition-transform
+          relative flex-shrink-0 cursor-pointer touch-manipulation transition-transform
           ${canPlay ? 'hover:scale-105 hover:-translate-y-2' : 'opacity-60'}
-          focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 focus-visible:outline-offset-2 rounded
         `}
         onClick={handleClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleClick()
-          }
-        }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onPointerLeave={handlePointerEnd}
-        aria-label={`${cardName}, costs ${cost}. ${canPlay ? 'Click to play' : isYourTurn ? 'Not enough resources' : "Not your turn"}`}
+        title={canPlay ? undefined : status}
       >
-        <CardFace
-          cardName={cardName}
-          color={color}
-          cost={cost}
-          effectText={effectText}
-          bottomLeft={
-            canDiscard && canAct ? (
-              <button
-                className="flex h-6 w-6 items-center justify-center rounded bg-stone-600 text-xs font-bold text-red-400 hover:bg-stone-500"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDiscard()
-                }}
-                aria-label={`Discard ${cardName}`}
-                title="Discard"
-              >
-                -
-              </button>
-            ) : (
-              <div className="h-6 w-6" />
-            )
-          }
-        />
+        <div
+          role="button"
+          tabIndex={canAct ? 0 : -1}
+          aria-disabled={!canPlay}
+          aria-label={`${cardName}, costs ${cost}. ${effectText.replace(/\.$/, '')}. ${status}`}
+          className="rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleClick()
+            }
+          }}
+        >
+          <CardFace
+            cardName={cardName}
+            color={color}
+            cost={cost}
+            effectText={effectText}
+            bottomLeft={<div className="h-6 w-6" />}
+          />
+        </div>
+        {canDiscard && canAct && (
+          // Positioned over CardFace's bottom-left slot (border + bottom-bar padding)
+          <button
+            className="absolute bottom-[4px] left-[6px] flex h-6 w-6 items-center justify-center rounded bg-stone-600 text-xs font-bold text-red-400 hover:bg-stone-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 md:bottom-[8px] md:left-[10px]"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDiscard()
+            }}
+            aria-label={`Discard ${cardName}`}
+            title="Discard"
+          >
+            -
+          </button>
+        )}
       </div>
 
       {showPreview && (

@@ -107,6 +107,8 @@ data:
          "onlyInt": True},
         {"name": "win_resources",       "type": "number", "required": False,
          "onlyInt": True},
+        {"name": "win_forfeit",         "type": "number", "required": False,
+         "onlyInt": True},
     ]:
         if field["name"] not in existing:
             users.setdefault(schema_key, []).append(field)

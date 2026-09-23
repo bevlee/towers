@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { WIN_TOWER, WIN_RESOURCES, HAND_SIZE, MAX_CONSECUTIVE_TIMEOUTS } from '@towers/shared'
 import { useArtStyle, setArtStyle } from '../hooks/useArtStyle'
+import { useModal } from '../hooks/useModal'
 
 interface SettingsModalProps {
   turnTimer: number
@@ -9,14 +9,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
   const artStyle = useArtStyle()
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  const panelRef = useModal(onClose)
 
   return (
     <div
@@ -27,10 +20,11 @@ export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
       aria-labelledby="settings-title"
     >
       <div
+        ref={panelRef}
         className="flex w-full max-w-xs flex-col gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="settings-title" className="text-center text-xl font-bold text-amber-400">Game Info</h2>
+        <h2 id="settings-title" className="text-center text-xl font-bold text-amber-400">Settings</h2>
 
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
@@ -60,6 +54,7 @@ export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
                 <button
                   key={style}
                   onClick={() => setArtStyle(style)}
+                  aria-pressed={artStyle === style}
                   className={`rounded px-2 py-1 text-xs font-bold capitalize ${
                     artStyle === style
                       ? 'bg-amber-500 text-stone-900'
@@ -74,6 +69,7 @@ export function SettingsModal({ turnTimer, onClose }: SettingsModalProps) {
         </div>
 
         <button
+          data-autofocus
           className="mt-2 rounded bg-stone-700 px-4 py-2 text-sm font-bold text-stone-300 hover:bg-stone-600"
           onClick={onClose}
         >

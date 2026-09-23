@@ -35,19 +35,21 @@ function AppRoutes() {
 
   useEffect(() => {
     function onGameStart(_payload: GameStartPayload) {
+      clearLobbyError()
       navigate('/game')
     }
     socket.on(GAME_EVENTS.GAME_START, onGameStart)
     return () => {
       socket.off(GAME_EVENTS.GAME_START, onGameStart)
     }
-  }, [navigate])
+  }, [navigate, clearLobbyError])
 
   const handleBackToLobby = useCallback(() => {
     if (currentRoom) leaveRoom(currentRoom.id)
     resetGame()
+    clearLobbyError()
     navigate('/')
-  }, [currentRoom, leaveRoom, resetGame, navigate])
+  }, [currentRoom, leaveRoom, resetGame, clearLobbyError, navigate])
 
   const handleCreate = useCallback((turnTimer: number, gameConfig: GameConfig, bot?: 'easy' | 'hard') => {
     createRoom(turnTimer, username, gameConfig, bot)
@@ -130,6 +132,8 @@ function AppRoutes() {
               pendingDrawDiscard={pendingDrawDiscard}
               onBackToLobby={handleBackToLobby}
               turnTimer={currentRoom?.turnTimer ?? 0}
+              error={error}
+              onClearError={clearLobbyError}
             />
           ) : (
             <Navigate to="/" replace />
