@@ -8,15 +8,15 @@ import { logger } from '../logger.js'
 import { continueTurn, endGame, finishTurn, handleTurnTimeout } from './turnFlow.js'
 
 const PlayCardSchema = z.object({
-  cardInstanceId: z.string().min(1),
+  cardInstanceId: z.string().min(1).max(100),
 })
 
 const DiscardCardSchema = z.object({
-  cardInstanceId: z.string().min(1),
+  cardInstanceId: z.string().min(1).max(100),
 })
 
 const DrawDiscardChoiceSchema = z.object({
-  discardCardInstanceId: z.string().min(1),
+  discardCardInstanceId: z.string().min(1).max(100),
 })
 
 /**
@@ -174,6 +174,11 @@ export function registerGameHandlers(
     const { room, state, currentPlayer, cardInstance: discardedCard } = ctx
     const roomId = room.id
     const playerIndex = state.currentPlayerIndex
+
+    if (!state.awaitingDrawDiscard) {
+      socket.emit(LOBBY_EVENTS.ERROR, { message: 'Not in draw-discard phase' })
+      return
+    }
 
     const def = CARD_MAP[discardedCard.cardName]
     if (def?.canDiscard === false) {

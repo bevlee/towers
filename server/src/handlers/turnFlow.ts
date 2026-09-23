@@ -88,11 +88,14 @@ export function handleTurnTimeout(
   const currentPlayer = room.gameState.players[playerIndex]
   if (currentPlayer.hand.length === 0) return
 
-  // During draw-discard phase: auto-discard the most recently drawn card (last in hand)
-  // and advance the turn, forfeiting the play-again opportunity.
+  const isDiscardable = (c: (typeof currentPlayer.hand)[number]) => CARD_MAP[c.cardName]?.canDiscard !== false
+
+  // During draw-discard phase: auto-discard the most recently drawn discardable card
+  // (last in hand), redraw to refill the hand, and pass the turn — forfeiting the
+  // play-again opportunity.
   if (room.gameState.awaitingDrawDiscard) {
-    const cardToDiscard = currentPlayer.hand[currentPlayer.hand.length - 1]
-    const updatedPlayer = { ...currentPlayer, hand: currentPlayer.hand.slice(0, -1) }
+    const cardToDiscard = [...currentPlayer.hand].reverse().find(isDiscardable) ?? currentPlayer.hand[currentPlayer.hand.length - 1]
+    const updatedPlayer = { ...currentPlayer, hand: currentPlayer.hand.filter((c) => c.id !== cardToDiscard.id) }
     const players = [...room.gameState.players] as typeof room.gameState.players
     players[playerIndex] = updatedPlayer
 
@@ -103,6 +106,7 @@ export function handleTurnTimeout(
       awaitingDrawDiscard: false,
     }
 
+    room.gameState = turnManager.drawForPlayer(room.gameState, playerIndex)
     room.gameState = turnManager.addHistoryEntry(room.gameState, currentPlayer, 'timeout_discard', cardToDiscard.cardName)
     room.gameState = turnManager.switchTurn(room.gameState)
 
@@ -113,24 +117,25 @@ export function handleTurnTimeout(
     return
   }
 
-  // Pick a random discardable card, or any card if none are discardable
-  const discardableCards = currentPlayer.hand.filter((c) => {
-    const def = CARD_MAP[c.cardName]
-    return def?.canDiscard !== false
-  })
-
-  const pool = discardableCards.length > 0 ? discardableCards : currentPlayer.hand
+  // Pick a random discardable card; if every card is undiscardable, force-discard any card
+  // so the game can't stall.
+  const discardableCards = currentPlayer.hand.filter(isDiscardable)
+  const force = discardableCards.length === 0
+  const pool = force ? currentPlayer.hand : discardableCards
   const randomCard = pool[Math.floor(Math.random() * pool.length)]
 
+  // This runs in a timer callback: an uncaught throw here would take down the process.
+  let result
   try {
-    const result = turnManager.handleDiscard(room.gameState, randomCard.id)
-    room.gameState = turnManager.addHistoryEntry(result.state, currentPlayer, 'timeout_discard', randomCard.cardName)
-
-    emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
-      discardedCardInstanceId: randomCard.id,
-    })
-    finishTurn(io, room, roomManager, turnManager)
+    result = turnManager.handleDiscard(room.gameState, randomCard.id, force)
   } catch (err) {
     logger.error({ roomId, err }, 'Error during turn timeout')
+    return
   }
+  room.gameState = turnManager.addHistoryEntry(result.state, currentPlayer, 'timeout_discard', randomCard.cardName)
+
+  emitToBothPlayers(io, room, GAME_EVENTS.TURN_TIMEOUT, {
+    discardedCardInstanceId: randomCard.id,
+  })
+  finishTurn(io, room, roomManager, turnManager)
 }

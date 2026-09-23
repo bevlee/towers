@@ -48,10 +48,11 @@ export function ProfilePage({ selfUsername }: ProfilePageProps) {
 
             <div className="mb-8 rounded-lg border border-stone-700 bg-stone-800 p-4">
               <h2 className="mb-3 text-sm uppercase tracking-wide text-stone-400">Wins by type</h2>
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
                 <Breakdown label="Tower destroyed" value={user.win_tower_destroyed ?? 0} />
                 <Breakdown label="Tower built"     value={user.win_tower_built     ?? 0} />
                 <Breakdown label="Resources"       value={user.win_resources       ?? 0} />
+                <Breakdown label="Forfeit"         value={user.win_forfeit         ?? 0} />
               </div>
             </div>
 

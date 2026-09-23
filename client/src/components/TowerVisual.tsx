@@ -308,10 +308,10 @@ export function TowerVisual({ tower, wall, side }: TowerVisualProps) {
       {/* Numeric values - anchored below structures, matching visual order */}
       <div className={`mt-1 flex justify-center gap-2 text-sm @min-[7rem]:mt-2 @min-[7rem]:gap-3 @min-[7rem]:text-sm ${wallOrder}`}>
         <span className={`tabular-nums ${towerColor} ${towerChange.state !== 'none' ? 'number-pop' : ''} ${towerChange.state === 'increase' ? state.gain : towerChange.state === 'decrease' ? state.danger : ''}`}>
-          <span className="text-xs opacity-60">T</span> {tower}
+          <span className="text-xs opacity-60" title="Tower">T</span> {tower}
         </span>
         <span className={`tabular-nums ${wallColor} ${wallChange.state !== 'none' ? 'number-pop' : ''} ${wallChange.state === 'increase' ? state.gain : wallChange.state === 'decrease' ? state.danger : ''}`}>
-          <span className="text-xs opacity-60">W</span> {wall}
+          <span className="text-xs opacity-60" title="Wall">W</span> {wall}
         </span>
       </div>
     </div>

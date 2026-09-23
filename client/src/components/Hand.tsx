@@ -49,13 +49,15 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
           </span>
         </div>
       )}
-      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-2 sm:gap-y-0 sm:px-4 sm:py-3">
+      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 px-2 py-2 sm:flex-nowrap sm:gap-x-1.5 sm:gap-y-0 sm:px-3 sm:py-2 md:gap-x-2 md:px-4 md:py-3">
         {hand.map((card) => {
           const def = CARD_MAP[card.cardName]
           if (!def) return null
 
           const resource = getResourceForColor(def.color)
-          const playable = !pendingDrawDiscard && player[resource] >= def.cost
+          const discardable = def.canDiscard !== false
+          // In draw-discard mode, tapping a card discards it, so "playable" means "discardable"
+          const playable = pendingDrawDiscard ? discardable : player[resource] >= def.cost
           const isNew = newCardIds.current.has(card.id)
 
           const handlePlay = pendingDrawDiscard
@@ -71,7 +73,7 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
               key={card.id}
               className={[
                 isNew ? 'animate-card-draw' : '',
-                pendingDrawDiscard ? 'animate-pulse' : '',
+                pendingDrawDiscard && discardable ? 'animate-pulse' : '',
               ].filter(Boolean).join(' ')}
             >
               <Card
@@ -82,7 +84,8 @@ export function Hand({ hand, player, isYourTurn, onPlay, onDiscard, pendingDrawD
                 effectText={describeEffects(def)}
                 playable={playable}
                 isYourTurn={isYourTurn || pendingDrawDiscard}
-                canDiscard={pendingDrawDiscard ? true : def.canDiscard !== false}
+                canDiscard={discardable}
+                discardMode={pendingDrawDiscard}
                 onPlay={handlePlay}
                 onDiscard={handleDiscard}
               />

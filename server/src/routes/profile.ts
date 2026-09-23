@@ -28,7 +28,7 @@ export function registerProfileRoutes(app: Express): void {
     try {
       const user = await pb.collection('users').getFirstListItem(
         pb.filter('username = {:username}', { username: req.params.username }),
-        { fields: 'id,username,wins,losses,win_tower_built,win_tower_destroyed,win_resources' }
+        { fields: 'id,username,wins,losses,win_tower_built,win_tower_destroyed,win_resources,win_forfeit' }
       )
       res.json(user)
     } catch (err: any) {

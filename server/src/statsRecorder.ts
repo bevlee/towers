@@ -30,6 +30,9 @@ const WIN_TYPE_FIELD: Record<string, string> = {
   tower_built:     'win_tower_built',
   tower_destroyed: 'win_tower_destroyed',
   resources:       'win_resources',
+  // AFK (3 consecutive timeouts) is a forfeit for stats purposes
+  forfeit:         'win_forfeit',
+  afk:             'win_forfeit',
 }
 
 async function _persist(

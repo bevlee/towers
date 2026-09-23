@@ -164,8 +164,10 @@ export class TurnManager {
   /**
    * Handle a player discarding a card.
    * Removes the card from hand, draws a replacement, and switches turns.
+   * `force` skips the canDiscard check — used by turn timeouts when every card
+   * in hand is undiscardable, so the game can still advance.
    */
-  handleDiscard(state: GameState, cardInstanceId: string): DiscardResult {
+  handleDiscard(state: GameState, cardInstanceId: string, force = false): DiscardResult {
     const idx = state.currentPlayerIndex
     const player = { ...state.players[idx] }
 
@@ -178,7 +180,7 @@ export class TurnManager {
     // Check canDiscard (Lodestone)
     const card = player.hand[cardIdx]
     const def = CARD_MAP[card.cardName]
-    if (def && def.canDiscard === false) {
+    if (!force && def && def.canDiscard === false) {
       throw new Error(`Card cannot be discarded: ${card.cardName}`)
     }
 

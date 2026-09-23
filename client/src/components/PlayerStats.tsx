@@ -97,8 +97,8 @@ export function PlayerStats({ player, side }: PlayerStatsProps) {
   const align = side === 'left' ? 'text-left' : 'text-right'
 
   return (
-    <div className={`@container flex w-20 flex-col gap-1 sm:w-40 sm:gap-2 ${align}`}>
-      <div className="mb-1 hidden truncate text-sm font-bold text-amber-200 sm:block">
+    <div className={`@container flex w-20 flex-col gap-1 sm:w-24 sm:gap-1.5 md:w-32 md:gap-2 lg:w-40 ${align}`}>
+      <div className="mb-1 truncate text-[10px] font-bold text-amber-200 sm:text-sm">
         {player.username}
       </div>
       <ResourceRow

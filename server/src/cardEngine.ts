@@ -97,13 +97,16 @@ function evaluateCondition(
           return selfLevel > enemyLevel
         case 'eq':
           return selfLevel === enemyLevel
+        default:
+          return false
       }
-      break
     }
     case 'wall_zero': {
       const target = condition.target === 'self' ? self : enemy
       return target.wall === 0
     }
+    default:
+      return false
   }
 }
 

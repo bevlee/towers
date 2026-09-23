@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ClientGameState } from '@towers/shared'
 import { PlayerStats } from '../components/PlayerStats'
 import { TowerVisual } from '../components/TowerVisual'
@@ -8,6 +8,8 @@ import { TurnIndicator } from '../components/TurnIndicator'
 import { Hand } from '../components/Hand'
 import { GameOverModal } from '../components/GameOverModal'
 import { GameHistory } from '../components/GameHistory'
+import { LeaveConfirmModal } from '../components/LeaveConfirmModal'
+import { MobileHistorySheet } from '../components/MobileHistorySheet'
 import { SettingsModal } from '../components/SettingsModal'
 import type { GameOverInfo } from '../hooks/useGameState'
 
@@ -21,7 +23,12 @@ interface GamePageProps {
   pendingDrawDiscard: boolean
   onBackToLobby: () => void
   turnTimer: number
+  /** Last server error (e.g. a rejected move); shown briefly as a toast. */
+  error: string | null
+  onClearError: () => void
 }
+
+const ERROR_TOAST_MS = 3000
 
 const MIN_HISTORY_HEIGHT = 32
 const DEFAULT_HISTORY_HEIGHT = 160
@@ -36,6 +43,8 @@ export function GamePage({
   pendingDrawDiscard,
   onBackToLobby,
   turnTimer,
+  error,
+  onClearError,
 }: GamePageProps) {
   const { you, opponent, isYourTurn } = gameState
   const isWinner = gameOver ? gameOver.winner === you.playerId : false
@@ -45,6 +54,18 @@ export function GamePage({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const dragging = useRef(false)
+
+  const cleanupDrag = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(onClearError, ERROR_TOAST_MS)
+    return () => clearTimeout(timer)
+  }, [error, onClearError])
+
+  useEffect(() => {
+    return () => { cleanupDrag.current?.() }
+  }, [])
 
   const onDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -64,10 +85,12 @@ export function GamePage({
       dragging.current = false
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
+      cleanupDrag.current = null
     }
 
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
+    cleanupDrag.current = onMouseUp
   }, [historyHeight])
 
   const handleLeaveGame = useCallback(() => {
@@ -101,6 +124,7 @@ export function GamePage({
             className="rounded p-1.5 text-stone-400 hover:bg-stone-700 hover:text-amber-300"
             onClick={() => setShowSettings(true)}
             title="Settings"
+            aria-label="Settings"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
               <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.993 6.993 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
@@ -112,6 +136,7 @@ export function GamePage({
             className="rounded p-1.5 text-red-400 hover:bg-red-900/50 hover:text-red-300"
             onClick={() => setShowLeaveConfirm(true)}
             title="Leave Game"
+            aria-label="Leave game"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
               <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd" />
@@ -128,10 +153,20 @@ export function GamePage({
         </div>
       )}
 
+      {/* Rejected-move / server error toast */}
+      {error && (
+        <div
+          role="alert"
+          className="pointer-events-none fixed left-1/2 top-14 z-40 -translate-x-1/2 rounded bg-red-900/90 px-4 py-2 text-sm text-red-100 shadow-lg"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Main game area - fills available space */}
-      <div className="flex min-h-0 flex-1 px-1 py-1 sm:px-4 sm:py-2">
+      <div className="flex min-h-0 flex-1 px-1 py-1 sm:px-2 sm:py-1.5 md:px-4 md:py-2">
         {/* Left side: your resources + tower */}
-        <div className="flex min-h-0 flex-col sm:flex-row sm:gap-3">
+        <div className="flex min-h-0 flex-col sm:flex-row sm:gap-2 md:gap-3">
           <PlayerStats player={you} side="left" />
           <TowerVisual tower={you.tower} wall={you.wall} side="left" />
         </div>
@@ -143,7 +178,7 @@ export function GamePage({
         </div>
 
         {/* Right side: opponent tower + resources */}
-        <div className="flex min-h-0 flex-col-reverse sm:flex-row sm:gap-3">
+        <div className="flex min-h-0 flex-col-reverse sm:flex-row sm:gap-2 md:gap-3">
           <TowerVisual tower={opponent.tower} wall={opponent.wall} side="right" />
           <PlayerStats player={opponent} side="right" />
         </div>
@@ -196,32 +231,11 @@ export function GamePage({
 
       {/* Mobile history sheet */}
       {historyOpen && (
-        <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setHistoryOpen(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div
-            className="absolute inset-x-0 bottom-0 flex h-[60vh] flex-col rounded-t-xl bg-stone-950 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-stone-800 px-3 py-2">
-              <div className="flex items-baseline gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-400">History</span>
-                <span className="text-xs text-stone-500">{gameState.history.length} moves</span>
-              </div>
-              <button
-                className="rounded p-1 text-stone-400 hover:bg-stone-800 hover:text-amber-300"
-                onClick={() => setHistoryOpen(false)}
-                aria-label="Close history"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <GameHistory history={gameState.history} yourPlayerId={you.playerId} />
-            </div>
-          </div>
-        </div>
+        <MobileHistorySheet
+          history={gameState.history}
+          yourPlayerId={you.playerId}
+          onClose={() => setHistoryOpen(false)}
+        />
       )}
 
       {/* Game over modal */}
@@ -243,32 +257,10 @@ export function GamePage({
 
       {/* Leave game confirmation */}
       {showLeaveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setShowLeaveConfirm(false)}>
-          <div
-            className="flex flex-col items-center gap-4 rounded-xl border border-stone-600 bg-stone-800 px-6 py-6 shadow-2xl sm:px-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-bold text-red-400">Leave Game?</h2>
-            <p className="text-center text-sm text-stone-300">
-              Leaving will forfeit the match.<br />
-              Your opponent will win.
-            </p>
-            <div className="flex gap-3">
-              <button
-                className="rounded bg-stone-700 px-5 py-2 text-sm font-bold text-stone-300 hover:bg-stone-600"
-                onClick={() => setShowLeaveConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded bg-red-700 px-5 py-2 text-sm font-bold text-white hover:bg-red-600"
-                onClick={handleLeaveGame}
-              >
-                Leave & Forfeit
-              </button>
-            </div>
-          </div>
-        </div>
+        <LeaveConfirmModal
+          onCancel={() => setShowLeaveConfirm(false)}
+          onLeave={handleLeaveGame}
+        />
       )}
     </div>
   )

@@ -13,12 +13,12 @@ import { CardArt } from './cardArt/CardArt'
  */
 const SIZES = {
   sm: {
-    frame:  'h-28 w-20 rounded-lg border-2 sm:h-40 sm:w-28',
-    name:   'px-1 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-xs sm:tracking-wide',
-    art:    'mx-1 mt-0.5 h-5 sm:mt-1 sm:h-8',
-    effect: 'px-1 py-0.5 text-[9px] leading-tight sm:px-2 sm:py-1 sm:text-[10px]',
-    bottom: 'px-1 pb-0.5 sm:px-2 sm:pb-1',
-    cost:   'h-6 w-6 text-xs sm:h-7 sm:w-7 sm:text-sm',
+    frame:  'h-28 w-20 rounded-lg border-2 sm:h-32 sm:w-[5.5rem] md:h-40 md:w-28',
+    name:   'px-1 py-0.5 text-[9px] sm:text-[10px] md:px-2 md:py-1 md:text-xs md:tracking-wide',
+    art:    'mx-1 mt-0.5 h-5 sm:h-6 md:mt-1 md:h-8',
+    effect: 'px-1 py-0.5 text-[9px] leading-tight md:px-2 md:py-1 md:text-[10px]',
+    bottom: 'px-1 pb-0.5 md:px-2 md:pb-1',
+    cost:   'h-6 w-6 text-xs md:h-7 md:w-7 md:text-sm',
   },
   md: {
     frame:  'h-40 w-28 rounded-lg border-2',

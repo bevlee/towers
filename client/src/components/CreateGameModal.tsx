@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { GameConfig } from '@towers/shared'
+import { useModal } from '../hooks/useModal'
 import {
   STARTING_RESOURCES,
   STARTING_LEVELS,
@@ -37,27 +38,50 @@ interface NumberFieldProps {
 }
 
 function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
+  // Keep the raw text while typing so the field can be cleared and retyped;
+  // clamp only when the user leaves the field.
+  const [draft, setDraft] = useState<string | null>(null)
+
+  function commit() {
+    if (draft === null) return
+    const n = Number(draft)
+    onChange(draft.trim() === '' || Number.isNaN(n) ? value : Math.max(min, Math.min(max, Math.round(n))))
+    setDraft(null)
+  }
+
   return (
     <label className="flex items-center justify-between gap-3">
       <span className="w-28 text-sm text-stone-300">{label}</span>
       <input
         type="number"
+        inputMode="numeric"
         min={min}
         max={max}
-        value={value}
-        onChange={(e) => onChange(Math.max(min, Math.min(max, Number(e.target.value))))}
+        value={draft ?? value}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          // Commit instead of submitting, so the submit handler never sees a stale config
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commit()
+          }
+        }}
         className="w-20 rounded border border-stone-600 bg-stone-700 px-2 py-1 text-right text-amber-100 outline-none focus:border-amber-500"
       />
     </label>
   )
 }
 
+const TURN_TIMER_OPTIONS = [15, 20, 30] as const
+
 export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
   const [gameMode, setGameMode] = useState<GameMode>('quick')
   const [config, setConfig] = useState<GameConfig>(defaultConfig)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [turnTimer, setTurnTimer] = useState(20)
+  const panelRef = useModal<HTMLFormElement>(onClose)
 
-  const turnTimer = 20
   const bot = gameMode === 'bot-easy' ? 'easy' : gameMode === 'bot-hard' ? 'hard' : undefined
 
   function set<K extends keyof GameConfig>(key: K, value: GameConfig[K]) {
@@ -74,12 +98,18 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-game-title"
+    >
       <form
+        ref={panelRef}
         className="flex max-h-[90vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-xl border border-stone-600 bg-stone-800 px-5 py-6 shadow-2xl sm:px-8"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-xl font-bold text-amber-200">Create a Challenge</h2>
+        <h2 id="create-game-title" className="text-xl font-bold text-amber-200">Create a Challenge</h2>
 
         {/* Game Mode */}
         <label className="flex flex-col gap-1">
@@ -88,7 +118,7 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
             value={gameMode}
             onChange={(e) => setGameMode(e.target.value as GameMode)}
             className="rounded border border-stone-600 bg-stone-700 px-3 py-2 text-amber-100 outline-none focus:border-amber-500"
-            autoFocus
+            data-autofocus
           >
             <option value="quick">Quick Game</option>
             <option value="bot-easy">Vs Computer (Easy)</option>
@@ -97,16 +127,39 @@ export function CreateGameModal({ onClose, onCreate }: CreateGameModalProps) {
           </select>
         </label>
 
+        {/* Turn Timer */}
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-sm text-stone-400">Turn Timer</legend>
+          <div className="flex gap-2">
+            {TURN_TIMER_OPTIONS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTurnTimer(t)}
+                aria-pressed={turnTimer === t}
+                className={`flex-1 rounded px-3 py-2 text-sm font-bold ${
+                  turnTimer === t
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                }`}
+              >
+                {t}s
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
         <hr className="border-stone-700" />
 
         {/* Advanced Options Dropdown */}
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
+          aria-expanded={showAdvanced}
           className="flex items-center justify-between rounded bg-stone-700 px-3 py-2 hover:bg-stone-600"
         >
           <span className="text-sm font-semibold text-stone-300">Advanced Options</span>
-          <span className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>▼</span>
+          <span aria-hidden className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>▼</span>
         </button>
 
         {showAdvanced && (

@@ -8,6 +8,7 @@ interface UserRecord {
   win_tower_built: number
   win_tower_destroyed: number
   win_resources: number
+  win_forfeit: number
 }
 
 interface ExpandedUser {

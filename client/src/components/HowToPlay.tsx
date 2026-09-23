@@ -9,6 +9,7 @@ export function HowToPlay() {
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-stone-800 focus:outline-none"
         aria-expanded={open}
+        aria-controls="how-to-play-content"
       >
         <span className="font-bold text-amber-400">How to Play</span>
         <svg
@@ -23,7 +24,7 @@ export function HowToPlay() {
       </button>
 
       {open && (
-        <div className="border-t border-stone-700 px-4 py-4 text-sm text-stone-300 space-y-4">
+        <div id="how-to-play-content" role="region" className="border-t border-stone-700 px-4 py-4 text-sm text-stone-300 space-y-4">
 
           {/* Goal */}
           <section>

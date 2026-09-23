@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 /**
  * Client-side countdown. Starts from serverValue and ticks down every second.
- * Resets (restarts from serverValue) whenever timerKey changes.
+ * Resets (restarts from serverValue) whenever timerKey or serverValue changes.
  */
 export function useCountdown(serverValue: number, timerKey: number): number {
   const [value, setValue] = useState(serverValue)
@@ -17,7 +17,7 @@ export function useCountdown(serverValue: number, timerKey: number): number {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [timerKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [timerKey, serverValue])
 
   return value
 }
