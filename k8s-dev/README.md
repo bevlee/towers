@@ -21,81 +21,33 @@ skaffold run -p dev
 kubectl -n towers-dev rollout status deployment/towers --timeout=5m
 ```
 
-The `dev` profile builds and pushes `:dev` images and deploys `k8s-dev/kustomization.yaml`
-to `towers-dev`, re-running the PocketBase setup Job like the prod deploy. The PocketBase
-admin secret is not in the Kustomization — create it once (see First-time setup). The
-manual steps below still work without Skaffold.
+The `dev` profile builds and pushes `:dev` images and applies everything in `k8s-dev/`
+and `k8s-dev/pocketbase/` to `towers-dev`, re-running the PocketBase setup Job like the
+prod deploy. The admin secret is not deployed — create it once (see First-time setup).
 
 DNS: `*.bevsoft.com` must resolve to the cluster's load balancer for the new hostnames
 to work. If you use individual DNS records instead of a wildcard, add records for
 `towers-dev.bevsoft.com` and `pbtowers-dev.bevsoft.com`.
 
-## Build and push dev images
-
-From the `towers/` directory (multi-arch, same as prod):
-
-```bash
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-client:dev \
-  -f client/Dockerfile \
-  . \
-  --push
-
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t bevdev1/towers-server:dev \
-  -f server/Dockerfile \
-  . \
-  --push
-```
-
-The `dev` tag is mutable — push over it freely, then restart to pull:
-
-```bash
-kubectl rollout restart deployment/towers -n towers-dev
-```
-
 ## First-time setup
 
 ```bash
 kubectl apply -f k8s-dev/namespace.yaml
-kubectl apply -f k8s-dev/certificate.yaml   # cert-manager issues bevsoft-wildcard-tls into towers-dev
 
-# Edit the admin credentials first (use different ones from prod!)
-kubectl apply -f k8s-dev/pocketbase/secret.yaml
+# Admin credentials (use different ones from prod!)
+kubectl -n towers-dev create secret generic pocketbase-admin \
+  --from-literal=email=ADMIN_EMAIL --from-literal=password=ADMIN_PASSWORD
 
-# PocketBase
-kubectl apply -f k8s-dev/pocketbase/statefulset.yaml
-kubectl apply -f k8s-dev/pocketbase/service.yaml
-kubectl apply -f k8s-dev/pocketbase/ingress.yaml
-
-kubectl apply -f k8s-dev/pocketbase/setup-configmap.yaml
-kubectl apply -f k8s-dev/pocketbase/setup-job.yaml
-
-# App
-kubectl apply -f k8s-dev/deployment.yaml
-kubectl apply -f k8s-dev/service.yaml
-kubectl apply -f k8s-dev/ingress.yaml
+skaffold run -p dev
 ```
 
 ## Every deploy
 
 ```bash
-# After pushing new :dev images
-kubectl rollout restart deployment/towers -n towers-dev
-
-# If manifests changed
-kubectl apply -k k8s-dev
+skaffold run -p dev
 ```
 
-Re-run the PocketBase setup job after schema changes:
-
-```bash
-kubectl apply -f k8s-dev/pocketbase/setup-configmap.yaml
-kubectl delete job pocketbase-setup -n towers-dev --ignore-not-found
-kubectl apply -f k8s-dev/pocketbase/setup-job.yaml
-```
+This also re-runs the PocketBase setup Job, so schema changes are picked up.
 
 ## Verify
 

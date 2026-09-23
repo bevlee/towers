@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
         - name: client
-          # Bare artifact name so Skaffold / Kustomize supply the tag (see
-          # k8s-dev/kustomization.yaml). A pinned tag here would drift from releases.
+          # Bare name: Skaffold substitutes the tag it builds (skaffold.yaml).
           image: docker.io/bevdev1/towers-client
           # The :dev tag is reused, so always pull.
           imagePullPolicy: Always
@@ -46,8 +45,7 @@ spec:
               memory: 128Mi
 
         - name: server
-          # Bare artifact name so Skaffold / Kustomize supply the tag (see
-          # k8s-dev/kustomization.yaml). A pinned tag here would drift from releases.
+          # Bare name: Skaffold substitutes the tag it builds (skaffold.yaml).
           image: docker.io/bevdev1/towers-server
           # The :dev tag is reused, so always pull.
           imagePullPolicy: Always

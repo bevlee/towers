@@ -15,57 +15,35 @@ manifests here, mirror the change there.
 | `service.yaml` | ClusterIP services: `nginx` (port 80) and `gameserver` (port 3000) |
 | `ingress.yaml` | Traefik ingress for `towers.bevsoft.com` with TLS; routes `/socket.io/` to `gameserver`, everything else to `nginx` |
 | `certificate.yaml` | cert-manager Certificate for `*.bevsoft.com` (creates `bevsoft-wildcard-tls`) |
-| `kustomization.yaml` | Entry point for `kubectl apply -k k8s` and Skaffold; pins the release image tag |
-| `pocketbase/` | PocketBase StatefulSet, service, ingress, and the schema setup Job + script |
+| `pocketbase/` | PocketBase StatefulSet, service, ingress, schema setup Job + script; `secret.yaml.example` is a template, never applied |
 
 Both containers run in the same pod, so the server is reachable at `127.0.0.1:3000` from the nginx container (see `GAMESERVER_HOST` / `GAMESERVER_PORT` env vars).
 
-## Deploy with Skaffold
+## Deploy
 
-`skaffold.yaml` (repo root) builds both images for `linux/amd64` and `linux/arm64`
-(OKE runs ARM64 hosts), tags them with the release version, pushes them to Docker Hub,
-and deploys `k8s/` through its Kustomize entry point, `k8s/kustomization.yaml`.
+`skaffold.yaml` (repo root) builds both images for amd64 + arm64, tags them with the
+version in `build.tagPolicy`, pushes them to Docker Hub and applies every manifest in
+`k8s/` and `k8s/pocketbase/`. It also deletes the finished `pocketbase-setup` Job first,
+so the (idempotent) schema setup re-runs on every deploy.
 
-Prerequisites: `skaffold` v2, `kubectl` pointing at the cluster, `docker login` to
-Docker Hub, Docker with buildx, cert-manager and Traefik in the cluster.
+Needs `skaffold` v2, `kubectl` pointed at the cluster, `docker login`, and Docker buildx.
 
 ```bash
 skaffold run
 kubectl -n towers rollout status deployment/towers --timeout=5m
 ```
 
-Every deploy also re-runs the PocketBase schema setup: a Skaffold `before` hook deletes
-the `pocketbase-setup` Job so the re-applied one runs again (the script is idempotent).
+**New release:** bump `template:` in `skaffold.yaml`, commit, `git tag vX.Y`, `skaffold run`.
 
-### Cutting a new version
+**Roll back / redeploy an existing tag** without rebuilding: `skaffold deploy -t v1.4`.
 
-Release tags are immutable (`imagePullPolicy: IfNotPresent`), so bump the version for
-every release, in both places:
-
-1. `skaffold.yaml` → `build.tagPolicy.envTemplate.template`
-2. `k8s/kustomization.yaml` → `images[].newTag` (both images)
-
-Commit, tag the commit (`git tag vX.Y && git push origin vX.Y`), then `skaffold run`.
-Rolling back is `kubectl apply -k k8s` from the previous tag's checkout.
-
-### First install
-
-The PocketBase admin secret is not part of the Kustomization (its values are
-placeholders). Create it once before the first deploy:
+**First install only:** the PocketBase admin secret is not deployed (the template holds
+placeholder values). Create it once:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl -n towers create secret generic pocketbase-admin \
   --from-literal=email=ADMIN_EMAIL --from-literal=password=ADMIN_PASSWORD
-```
-
-### Without Skaffold
-
-After the images for the tag in `k8s/kustomization.yaml` have been pushed:
-
-```bash
-kubectl -n towers delete job pocketbase-setup --ignore-not-found
-kubectl apply -k k8s
 ```
 
 ## Verify
