@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { socket } from '../socket'
 
+const CONNECT_RETRY_MS = 3000
+
 /**
  * Manages the Socket.IO connection lifecycle.
  * The socket connects only once the player is signed in so the server
@@ -13,13 +15,21 @@ export function useSocket(signedIn: boolean) {
 
   // Register connect/disconnect listeners once for the lifetime of the app.
   useEffect(() => {
+    let retry: ReturnType<typeof setTimeout> | undefined
     function onConnect() { setConnected(true) }
     function onDisconnect() { setConnected(false) }
+    // A server refusal (sign-in temporarily unavailable) doesn't auto-reconnect.
+    function onConnectError() {
+      if (!socket.active) retry = setTimeout(() => socket.connect(), CONNECT_RETRY_MS)
+    }
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
+    socket.on('connect_error', onConnectError)
     return () => {
+      clearTimeout(retry)
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
+      socket.off('connect_error', onConnectError)
     }
   }, [])
 

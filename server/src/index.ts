@@ -16,6 +16,13 @@ const app = express()
 const httpServer = createServer(app)
 
 const io = new Server(httpServer, {
+  // CORS headers don't cover WebSocket upgrades, so check Origin on every handshake.
+  // Another *.bevsoft.com site is same-site and would otherwise get the player's cookie.
+  // Browsers always send Origin here; a client without one has no cookie to abuse.
+  allowRequest: (req, callback) => {
+    const origin = req.headers.origin
+    callback(null, !origin || origin === CLIENT_ORIGIN)
+  },
   cors: {
     origin: CLIENT_ORIGIN,
     methods: ['GET', 'POST'],
@@ -63,16 +70,19 @@ app.post('/api/auth/sign-out', async (req, res) => {
 /**
  * Socket.IO middleware — resolve the player from the handshake's auth cookie.
  * On success `socket.data.userId` is the auth user ID; connections without a
- * valid session are still allowed (stats just won't be recorded).
+ * session are still allowed (stats just won't be recorded). If the auth service
+ * or database fails, refuse the connection so the client retries rather than
+ * silently playing a game that won't count.
  */
 io.use(async (socket, next) => {
   try {
     const user = await sessionUser(socket.request.headers.cookie)
     if (user) socket.data.userId = (await ensurePlayer(user)).id
+    next()
   } catch (err) {
-    logger.warn({ err }, 'Could not resolve socket session — continuing unauthenticated')
+    logger.warn({ err }, 'Could not resolve socket session — refusing connection')
+    next(new Error('Sign-in is temporarily unavailable'))
   }
-  next()
 })
 
 io.on('connection', (socket) => {
@@ -88,6 +98,9 @@ io.on('connection', (socket) => {
 httpServer.listen(SERVER_PORT, () => {
   logger.info({ port: SERVER_PORT, cors: CLIENT_ORIGIN }, 'Two Towers server started')
 })
+
+// Log instead of exiting, so one failed background task can't end every live game.
+process.on('unhandledRejection', (err) => logger.error({ err }, 'Unhandled promise rejection'))
 
 // Migrate the database after the server is listening (non-blocking)
 void initDb()

@@ -9,7 +9,8 @@ interface AuthState {
   user: Player | null
   loading: boolean
   error: string | null
-  logout: () => Promise<void>
+  /** Resolves false, with `error` set, when the session couldn't be ended. */
+  logout: () => Promise<boolean>
 }
 
 /** The signed-in player, resolved by the server from the shared bevsoft.com auth cookie. */
@@ -29,8 +30,14 @@ export function useAuth(): AuthState {
   }, [])
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => {})
+    const res = await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null)
+    if (!res?.ok) {
+      setError('Sign-out failed. Please try again.')
+      return false
+    }
+    setError(null)
     setUser(null)
+    return true
   }, [])
 
   return { user, loading, error, logout }

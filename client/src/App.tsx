@@ -60,12 +60,12 @@ function AppRoutes() {
     joinRoom(roomId, username)
   }, [joinRoom, username, clearLobbyError])
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    if (!(await logout())) return
     if (currentRoom) leaveRoom(currentRoom.id)
     resetGame()
     navigate('/')
     socket.disconnect()
-    void logout()
   }, [currentRoom, leaveRoom, resetGame, logout, navigate])
 
   // Public routes (profile + match) work logged-out — render before auth gate.
@@ -104,7 +104,7 @@ function AppRoutes() {
             onCreate={handleCreate}
             onLeaveRoom={leaveRoom}
             currentRoom={currentRoom}
-            error={error}
+            error={error ?? authError}
             username={username}
             onLogout={handleLogout}
           />

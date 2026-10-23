@@ -1,5 +1,6 @@
 import type { GameState } from '@towers/shared'
 import { CARD_MAP } from '@towers/shared'
+import type { PoolClient } from 'pg'
 import { pool } from './db.js'
 import { logger } from './logger.js'
 
@@ -42,8 +43,9 @@ async function persist(
   loserId: string,
   userIds: UserIds,
 ): Promise<void> {
-  const client = await pool!.connect()
+  let client: PoolClient | undefined
   try {
+    client = await pool!.connect()
     await client.query('BEGIN')
 
     // Lock both players in a fixed order first, so two games between the same
@@ -91,9 +93,9 @@ async function persist(
     await client.query('COMMIT')
     logger.info({ gameId: game.id, winReason: state.winReason }, 'Game stats recorded')
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {})
+    await client?.query('ROLLBACK').catch(() => {})
     logger.error({ err }, 'Failed to record game stats')
   } finally {
-    client.release()
+    client?.release()
   }
 }

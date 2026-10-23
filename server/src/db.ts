@@ -3,7 +3,15 @@ import { DATABASE_URL } from './config.js'
 import { logger } from './logger.js'
 import type { AuthUser } from './auth.js'
 
-export const pool = DATABASE_URL ? new pg.Pool({ connectionString: DATABASE_URL }) : null
+// Bound every wait so a slow or unreachable database fails requests instead of hanging them.
+export const pool = DATABASE_URL
+  ? new pg.Pool({
+    connectionString: DATABASE_URL,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 10_000,
+    query_timeout: 15_000,
+  })
+  : null
 
 pool?.on('error', (err) => logger.error({ err }, 'Postgres pool error'))
 
