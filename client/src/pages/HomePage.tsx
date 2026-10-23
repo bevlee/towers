@@ -14,10 +14,12 @@ interface HomePageProps {
   currentRoom: RoomInfo | null
   error: string | null
   username: string
+  /** Guests have no profile and their games aren't recorded. */
+  isGuest: boolean
   onLogout: () => void
 }
 
-export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, currentRoom, error, username, onLogout }: HomePageProps) {
+export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, currentRoom, error, username, isGuest, onLogout }: HomePageProps) {
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
@@ -36,23 +38,31 @@ export function HomePage({ rooms, onRefresh, onJoin, onCreate, onLeaveRoom, curr
           </h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-stone-400">Playing as <span className="text-amber-200">{username}</span></span>
-            <Link
-              to="/profile"
-              className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-amber-500 hover:text-amber-200 transition-colors"
-            >
-              Profile
-            </Link>
+            {!isGuest && (
+              <Link
+                to="/profile"
+                className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-amber-500 hover:text-amber-200 transition-colors"
+              >
+                Profile
+              </Link>
+            )}
             <button
               onClick={onLogout}
               className="rounded border border-stone-600 px-3 py-1 text-xs text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-colors"
             >
-              Sign out
+              {isGuest ? 'Leave guest mode' : 'Sign out'}
             </button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        {isGuest && (
+          <div className="mb-4 rounded border border-amber-700/50 bg-amber-950/30 px-4 py-2 text-sm text-amber-200">
+            You're playing as a guest. Your games and stats won't be saved.
+          </div>
+        )}
+
         {/* Error banner */}
         {error && (
           <div className="mb-4 rounded border border-red-700 bg-red-900/30 px-4 py-2 text-red-300">

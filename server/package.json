@@ -10,14 +10,15 @@
   "dependencies": {
     "@towers/shared": "file:../shared",
     "express": "^5.1.0",
+    "pg": "^8.23.1",
     "pino": "^9.6.0",
-    "pocketbase": "^0.21.0",
     "socket.io": "^4.8.1",
     "zod": "^3.24.4"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.3",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "vitest": "^4.1.2"

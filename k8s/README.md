@@ -3,7 +3,7 @@
 Deploys Two Towers to a Kubernetes cluster behind Traefik with a wildcard TLS cert.
 
 A parallel dev environment (namespace `towers-dev`, `towers-dev.bevsoft.com`, `:dev`
-image tags, its own PocketBase) lives in `../k8s-dev/` — see its README. If you change
+image tags, its own database) lives in `../k8s-dev/` — see its README. If you change
 manifests here, mirror the change there.
 
 ## Files
@@ -15,7 +15,6 @@ manifests here, mirror the change there.
 | `service.yaml` | ClusterIP services: `nginx` (port 80) and `gameserver` (port 3000) |
 | `ingress.yaml` | Traefik ingress for `towers.bevsoft.com` with TLS; routes `/socket.io/` to `gameserver`, everything else to `nginx` |
 | `certificate.yaml` | cert-manager Certificate for `*.bevsoft.com` (creates `bevsoft-wildcard-tls`) |
-| `pocketbase/` | PocketBase StatefulSet, service, ingress, schema setup Job + script; `secret.yaml.example` is a template, never applied |
 
 Both containers run in the same pod, so the server is reachable at `127.0.0.1:3000` from the nginx container (see `GAMESERVER_HOST` / `GAMESERVER_PORT` env vars).
 
@@ -23,8 +22,8 @@ Both containers run in the same pod, so the server is reachable at `127.0.0.1:30
 
 `skaffold.yaml` (repo root) builds both images for amd64 + arm64, tags them with the
 version in `build.tagPolicy`, pushes them to Docker Hub and applies every manifest in
-`k8s/` and `k8s/pocketbase/`. It also deletes the finished `pocketbase-setup` Job first,
-so the (idempotent) schema setup re-runs on every deploy.
+`k8s/`. The server creates its Postgres tables on startup, so there is no separate
+schema step.
 
 Needs `skaffold` v2, `kubectl` pointed at the cluster, `docker login`, and Docker buildx.
 
@@ -37,14 +36,10 @@ kubectl -n towers rollout status deployment/towers --timeout=5m
 
 **Roll back / redeploy an existing tag** without rebuilding: `skaffold deploy -t v1.4`.
 
-**First install only:** the PocketBase admin secret is not deployed (the template holds
-placeholder values). Create it once:
-
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl -n towers create secret generic pocketbase-admin \
-  --from-literal=email=ADMIN_EMAIL --from-literal=password=ADMIN_PASSWORD
-```
+**First install only:** the server reads `DATABASE_URL` from the `towers-db` Secret, which
+is not in this repo. It was provisioned with the kubernetes-postgres-database skill
+(database `towers`, owner `towers_user`, on `postgres.db.svc.cluster.local:5432`).
+Sign-in uses the shared Better Auth service at `https://auth.bevsoft.com` (`AUTH_URL`).
 
 ## Verify
 
