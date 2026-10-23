@@ -3,11 +3,11 @@ import { socket } from '../socket'
 
 /**
  * Manages the Socket.IO connection lifecycle.
- * The socket connects only once a PocketBase auth token is available so the
- * server middleware can verify the player's identity on handshake.
- * Disconnects automatically when the token is cleared (logout).
+ * The socket connects only once the player is signed in so the server
+ * middleware can verify their identity from the auth cookie on handshake.
+ * Disconnects automatically on logout.
  */
-export function useSocket(token?: string | null) {
+export function useSocket(signedIn: boolean) {
   const [connected, setConnected] = useState(socket.connected)
   const hasConnected = useRef(false)
 
@@ -23,18 +23,17 @@ export function useSocket(token?: string | null) {
     }
   }, [])
 
-  // Connect when the token first becomes available; disconnect on logout.
+  // Connect on sign-in; disconnect on logout.
   useEffect(() => {
-    if (token && !hasConnected.current) {
-      socket.auth = { pbToken: token }
+    if (signedIn && !hasConnected.current) {
       socket.connect()
       hasConnected.current = true
     }
-    if (!token && hasConnected.current) {
+    if (!signedIn && hasConnected.current) {
       socket.disconnect()
       hasConnected.current = false
     }
-  }, [token])
+  }, [signedIn])
 
   return { connected }
 }

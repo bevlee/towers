@@ -20,15 +20,6 @@ build:
 manifests:
   rawYaml:
     - k8s/*.yaml
-    - k8s/pocketbase/*.yaml
-deploy:
-  kubectl:
-    hooks:
-      before:
-        # A finished Job never re-runs; delete it so the schema setup runs each deploy.
-        - host:
-            command: [kubectl, delete, job, pocketbase-setup, -n, towers, --ignore-not-found]
-
 profiles:
   # skaffold run -p dev  →  :dev images, k8s-dev/ manifests, towers-dev namespace
   - name: dev
@@ -39,10 +30,3 @@ profiles:
     manifests:
       rawYaml:
         - k8s-dev/*.yaml
-        - k8s-dev/pocketbase/*.yaml
-    deploy:
-      kubectl:
-        hooks:
-          before:
-            - host:
-                command: [kubectl, delete, job, pocketbase-setup, -n, towers-dev, --ignore-not-found]

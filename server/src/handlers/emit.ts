@@ -25,7 +25,7 @@ export function emitGameStateToBoth(io: Server, room: Room): void {
   }
 }
 
-/** Emit game over to both players and record stats to PocketBase. */
+/** Emit game over to both players and record stats. */
 export function emitGameOverToBoth(io: Server, room: Room, winnerId: string, winReason: string): void {
   if (!room.gameState) return
   if (room.player1) {
@@ -43,8 +43,8 @@ export function emitGameOverToBoth(io: Server, room: Room, winnerId: string, win
     })
   }
 
-  const pbIds: Record<string, string> = {}
-  if (room.player1?.pbUserId) pbIds[room.player1.playerId] = room.player1.pbUserId
-  if (room.player2?.pbUserId) pbIds[room.player2.playerId] = room.player2.pbUserId
-  recordGameResult(room.gameState, pbIds)
+  const userIds: Record<string, string> = {}
+  if (room.player1?.userId) userIds[room.player1.playerId] = room.player1.userId
+  if (room.player2?.userId) userIds[room.player2.playerId] = room.player2.userId
+  recordGameResult(room.gameState, userIds)
 }

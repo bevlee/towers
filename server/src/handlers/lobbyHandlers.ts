@@ -65,7 +65,7 @@ export function registerLobbyHandlers(
       playerId,
       username,
       socketId: socket.id,
-      pbUserId: socket.data.pbUserId as string | undefined,
+      userId: socket.data.userId as string | undefined,
     }, gameConfig)
 
     socket.join(room.id)
@@ -114,7 +114,7 @@ export function registerLobbyHandlers(
         playerId,
         username,
         socketId: socket.id,
-        pbUserId: socket.data.pbUserId as string | undefined,
+        userId: socket.data.userId as string | undefined,
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join room'

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { GAME_EVENTS } from '@towers/shared'
 import type { GameConfig, GameStartPayload } from '@towers/shared'
 import { socket } from './socket'
-import { usePbAuth } from './hooks/usePbAuth'
+import { useAuth } from './hooks/useAuth'
 import { useSocket } from './hooks/useSocket'
 import { useGameState } from './hooks/useGameState'
 import { useLobby } from './hooks/useLobby'
@@ -24,11 +24,11 @@ export default function App() {
 function AppRoutes() {
   const navigate = useNavigate()
 
-  const { user: pbUser, token: pbToken, loading: authLoading, error: authError, login, register, logout, clearError } = usePbAuth()
+  const { user, loading: authLoading, error: authError, logout } = useAuth()
 
-  const username = (pbUser?.username as string | undefined) ?? ''
+  const username = user?.username ?? ''
 
-  const { connected } = useSocket(pbToken)
+  const { connected } = useSocket(user !== null)
 
   const { gameState, gameOver, opponentDisconnected, pendingDrawDiscard, playCard, discardCard, sendDrawDiscardChoice, resetGame } = useGameState()
   const { rooms, currentRoom, error, listRooms, createRoom, joinRoom, leaveRoom, clearError: clearLobbyError } = useLobby()
@@ -65,28 +65,20 @@ function AppRoutes() {
     resetGame()
     navigate('/')
     socket.disconnect()
-    logout()
+    void logout()
   }, [currentRoom, leaveRoom, resetGame, logout, navigate])
 
   // Public routes (profile + match) work logged-out — render before auth gate.
-  // We allow these to short-circuit even when pbUser is null.
+  // We allow these to short-circuit even when user is null.
 
-  if (!pbUser) {
+  if (!user) {
     return (
       <Routes>
         <Route path="/profile/:username" element={<ProfilePage selfUsername={null} />} />
         <Route path="/match/:id" element={<MatchPage />} />
         <Route
           path="*"
-          element={
-            <AuthScreen
-              onLogin={login}
-              onRegister={register}
-              loading={authLoading}
-              error={authError}
-              onClearError={clearError}
-            />
-          }
+          element={<AuthScreen loading={authLoading} error={authError} />}
         />
       </Routes>
     )

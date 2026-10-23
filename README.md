@@ -152,7 +152,7 @@ npx vite build
 - **Server-authoritative**: The server holds the full game state including both hands and deck order. Clients receive a projected view that hides the opponent's hand.
 - **Pure card engine**: Card effects, damage resolution, and win checking are pure functions with no side effects, making them easy to test.
 - **Socket.IO events**: All communication is real-time via WebSockets. The lobby and game use separate event handler modules.
-- **In-memory state**: Rooms and game state are stored in memory. No database required.
+- **In-memory state**: Rooms and game state are stored in memory. Postgres holds only finished-game stats and match history.
 
 ## Game Rules
 
@@ -162,15 +162,34 @@ See [gameRules.md](gameRules.md) for a full breakdown of game mechanics, card ty
 ## Deployment
 
 `skaffold run` builds, tags, pushes and deploys a release to the `towers` namespace;
-`skaffold run -p dev` does the same for `towers-dev`. Each deploy also re-runs the
-PocketBase schema setup. See [k8s/README.md](k8s/README.md) for prerequisites and how to
-cut a new version.
+`skaffold run -p dev` does the same for `towers-dev`. See [k8s/README.md](k8s/README.md)
+for prerequisites and how to cut a new version.
 
-To re-run only the PocketBase schema setup:
+## Accounts and stats
+
+Sign-in is hosted by the shared Better Auth service at `https://auth.bevsoft.com`
+(`AUTH_URL`). The client links to its `/login` and `/signup` pages with a `callbackURL`
+pointing back at the current page. The auth cookie is set on `bevsoft.com`, so the
+server reads it directly and confirms it through the service's `get-session` API; sign-out
+goes through the server's same-origin `/api/auth/sign-out`.
+
+Stats and match history live in Postgres (`DATABASE_URL`). The server creates its tables
+on startup (`server/src/db.ts`), keyed by the Better Auth user ID. A player's username is
+taken from their account on first sign-in and made unique with a numeric suffix.
+
+Moving off PocketBase resets stats: PocketBase user IDs don't match Better Auth's, so old
+wins, losses and match history are not imported. `skaffold run` doesn't delete resources
+that were removed from the manifests, so the old PocketBase StatefulSet, Service, Ingress
+(`pbtowers.bevsoft.com`) and setup Job keep running until deleted by hand (repeat with
+`-n towers-dev` for dev):
 
 ```bash
-kubectl delete job -n towers pocketbase-setup
-kubectl apply -f k8s/pocketbase/setup-configmap.yaml
-kubectl apply -f k8s/pocketbase/setup-job.yaml
-kubectl logs -n towers -l job-name=pocketbase-setup -f
+kubectl -n towers delete statefulset/pocketbase service/pocketbase ingress/pocketbase-ingress \
+  job/pocketbase-setup configmap/pocketbase-setup-script secret/pocketbase-admin
 ```
+
+The StatefulSet's PVC holds the old data and is left in place until you delete it too.
+
+Local dev: the `bevsoft.com` cookie never reaches `localhost`, so signing in locally needs
+`AUTH_URL` pointed at a local Better Auth instance. Without `DATABASE_URL` the server runs
+with stats and accounts disabled.
