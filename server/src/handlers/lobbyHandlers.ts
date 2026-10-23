@@ -37,6 +37,11 @@ const LeaveRoomSchema = z.object({
   roomId: z.string().uuid(),
 })
 
+/** The name the handshake verified, falling back to the payload for unverified connections. */
+function playerName(socket: Socket, requested: string): string {
+  return (socket.data.username as string | undefined) ?? requested
+}
+
 /**
  * Register lobby-related Socket.IO event handlers on the given socket.
  */
@@ -57,7 +62,8 @@ export function registerLobbyHandlers(
       return
     }
 
-    const { turnTimer, username, gameConfig: rawConfig, bot } = parsed.data
+    const { turnTimer, gameConfig: rawConfig, bot } = parsed.data
+    const username = playerName(socket, parsed.data.username)
     const playerId = socket.data.playerId as string
     const gameConfig: GameConfig = rawConfig ?? defaultGameConfig()
 
@@ -105,7 +111,8 @@ export function registerLobbyHandlers(
       return
     }
 
-    const { roomId, username } = parsed.data
+    const { roomId } = parsed.data
+    const username = playerName(socket, parsed.data.username)
     const playerId = socket.data.playerId as string
 
     let room

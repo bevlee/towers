@@ -9,7 +9,8 @@ import { TurnManager } from './turnManager.js'
 import { registerLobbyHandlers } from './handlers/lobbyHandlers.js'
 import { registerGameHandlers } from './handlers/gameHandlers.js'
 import { registerProfileRoutes } from './routes/profile.js'
-import { initDb, ensurePlayer, pool } from './db.js'
+import { usernameError } from '@towers/shared'
+import { initDb, findPlayer, createPlayer, isUsernameTaken, pool } from './db.js'
 import { getSession, sessionUser, signOut } from './auth.js'
 
 const app = express()
@@ -40,7 +41,10 @@ app.get('/health', (_req, res) => {
 
 registerProfileRoutes(app)
 
-/** The signed-in player, or null. The browser sends the shared bevsoft.com auth cookie. */
+/**
+ * The signed-in account, or null. `username` stays null until the player picks
+ * a name. The browser sends the shared bevsoft.com auth cookie.
+ */
 app.get('/api/me', async (req, res) => {
   res.set('cache-control', 'no-store')
   try {
@@ -48,16 +52,68 @@ app.get('/api/me', async (req, res) => {
     for (const cookie of setCookies) res.append('set-cookie', cookie)
     if (!user) return void res.json(null)
     if (!pool) return void res.status(503).json({ message: 'Accounts unavailable' })
-    res.json(await ensurePlayer(user))
+    const player = await findPlayer(user.id)
+    res.json({ id: user.id, username: player?.username ?? null })
   } catch (err) {
     logger.error({ err }, 'Failed to resolve session')
     res.status(502).json({ message: 'Sign-in is temporarily unavailable' })
   }
 })
 
+/** Reject cross-site form posts; these routes act on the player's cookie. */
+function sameOrigin(req: express.Request, res: express.Response): boolean {
+  if (req.headers.origin === CLIENT_ORIGIN) return true
+  res.status(403).json({ message: 'Forbidden' })
+  return false
+}
+
+/** Pull a name from a JSON body and check it, replying 400 when it's unusable. */
+function requestedName(req: express.Request, res: express.Response): string | null {
+  const username = typeof req.body?.username === 'string' ? req.body.username : ''
+  const problem = usernameError(username)
+  if (problem) {
+    res.status(400).json({ message: problem })
+    return null
+  }
+  return username
+}
+
+/** A signed-in account picks its player name, once. */
+app.post('/api/me/username', express.json(), async (req, res) => {
+  if (!sameOrigin(req, res)) return
+  const username = requestedName(req, res)
+  if (!username) return
+  try {
+    const user = await sessionUser(req.headers.cookie)
+    if (!user) return void res.status(401).json({ message: 'Sign in first' })
+    if (!pool) return void res.status(503).json({ message: 'Accounts unavailable' })
+    if (await findPlayer(user.id)) return void res.status(409).json({ message: "You've already chosen a name" })
+    const player = await createPlayer(user.id, username)
+    if (!player) return void res.status(409).json({ message: 'That name is taken.' })
+    res.json(player)
+  } catch (err) {
+    logger.error({ err }, 'Failed to choose name')
+    res.status(502).json({ message: 'Could not save your name. Please try again.' })
+  }
+})
+
+/** Check a guest's name: valid, and not a registered player's. Nothing is stored. */
+app.post('/api/guest', express.json(), async (req, res) => {
+  if (!sameOrigin(req, res)) return
+  const username = requestedName(req, res)
+  if (!username) return
+  try {
+    if (await isUsernameTaken(username)) return void res.status(409).json({ message: 'That name belongs to a registered player.' })
+    res.json({ username })
+  } catch (err) {
+    logger.error({ err }, 'Failed to check guest name')
+    res.status(502).json({ message: 'Could not check that name. Please try again.' })
+  }
+})
+
 /** Same-origin sign-out, so the browser never calls the auth service cross-origin. */
 app.post('/api/auth/sign-out', async (req, res) => {
-  if (req.headers.origin !== CLIENT_ORIGIN) return void res.status(403).json({ message: 'Forbidden' })
+  if (!sameOrigin(req, res)) return
   try {
     for (const cookie of await signOut(req.headers.cookie)) res.append('set-cookie', cookie)
     res.json({ success: true })
@@ -68,16 +124,26 @@ app.post('/api/auth/sign-out', async (req, res) => {
 })
 
 /**
- * Socket.IO middleware — resolve the player from the handshake's auth cookie.
- * On success `socket.data.userId` is the auth user ID; connections without a
- * session are still allowed (stats just won't be recorded). If the auth service
- * or database fails, refuse the connection so the client retries rather than
- * silently playing a game that won't count.
+ * Socket.IO middleware — resolve who is playing. A signed-in player with a name
+ * gets `socket.data.userId` (stats are recorded) and `socket.data.username`.
+ * A guest sends `guestName` in the handshake auth; it gets the same checks as
+ * POST /api/guest. If the auth service or database fails, refuse the connection
+ * so the client retries rather than silently playing a game that won't count.
  */
 io.use(async (socket, next) => {
   try {
     const user = await sessionUser(socket.request.headers.cookie)
-    if (user) socket.data.userId = (await ensurePlayer(user)).id
+    const player = user && pool ? await findPlayer(user.id) : null
+    if (player) {
+      socket.data.userId = player.id
+      socket.data.username = player.username
+      return next()
+    }
+    const guestName = socket.handshake.auth?.guestName
+    if (typeof guestName === 'string') {
+      if (usernameError(guestName) || await isUsernameTaken(guestName)) return next(new Error('That guest name is not available'))
+      socket.data.username = guestName
+    }
     next()
   } catch (err) {
     logger.warn({ err }, 'Could not resolve socket session — refusing connection')

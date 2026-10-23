@@ -1,7 +1,6 @@
 import pg from 'pg'
 import { DATABASE_URL } from './config.js'
 import { logger } from './logger.js'
-import type { AuthUser } from './auth.js'
 
 // Bound every wait so a slow or unreachable database fails requests instead of hanging them.
 export const pool = DATABASE_URL
@@ -82,32 +81,29 @@ export interface Player {
   username: string
 }
 
-/** Profile URLs use the username, so keep it URL-safe and within 3–20 characters. */
-export function baseUsername(user: AuthUser): string {
-  const raw = user.username || user.name || user.email.split('@')[0] || ''
-  const slug = raw.trim().replace(/\s+/g, '_').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20)
-  return slug.length >= 3 ? slug : 'player'
+/** The towers player for an auth user, or null until they've chosen a name. */
+export async function findPlayer(id: string): Promise<Player | null> {
+  if (!pool) throw new Error('Database not configured')
+  const { rows } = await pool.query<Player>('SELECT id, username FROM players WHERE id = $1', [id])
+  return rows[0] ?? null
 }
 
-/** Find or create the towers player for an auth user, picking a free username on first sign-in. */
-export async function ensurePlayer(user: AuthUser): Promise<Player> {
-  if (!pool) throw new Error('Database not configured')
-  const existing = await pool.query<Player>('SELECT id, username FROM players WHERE id = $1', [user.id])
-  if (existing.rows[0]) return existing.rows[0]
+/** Whether a registered player already has this name, ignoring case. */
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  if (!pool) return false
+  const { rows } = await pool.query('SELECT 1 FROM players WHERE lower(username) = lower($1)', [username])
+  return rows.length > 0
+}
 
-  const base = baseUsername(user)
-  for (let n = 1; ; n++) {
-    const suffix = n === 1 ? '' : String(n)
-    const candidate = base.slice(0, 20 - suffix.length) + suffix
-    const inserted = await pool.query<Player>(
-      `INSERT INTO players (id, username) VALUES ($1, $2)
-       ON CONFLICT DO NOTHING
-       RETURNING id, username`,
-      [user.id, candidate],
-    )
-    if (inserted.rows[0]) return inserted.rows[0]
-    // A conflict on id means a concurrent request created this player first.
-    const raced = await pool.query<Player>('SELECT id, username FROM players WHERE id = $1', [user.id])
-    if (raced.rows[0]) return raced.rows[0]
-  }
+/** Create the player for an auth user. Returns null when the name is taken. */
+export async function createPlayer(id: string, username: string): Promise<Player | null> {
+  if (!pool) throw new Error('Database not configured')
+  const { rows } = await pool.query<Player>(
+    `INSERT INTO players (id, username) VALUES ($1, $2)
+     ON CONFLICT DO NOTHING
+     RETURNING id, username`,
+    [id, username],
+  )
+  // A conflict on id means this user already has a player (e.g. a double submit).
+  return rows[0] ?? await findPlayer(id)
 }

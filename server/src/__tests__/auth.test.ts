@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { authCookies, parseSession } from '../auth.js'
-import { baseUsername } from '../db.js'
+import { usernameError } from '@towers/shared'
 
 const future = new Date(Date.now() + 60_000).toISOString()
 
@@ -37,21 +37,18 @@ describe('parseSession', () => {
   })
 })
 
-describe('baseUsername', () => {
-  it('prefers the username plugin field', () => {
-    expect(baseUsername({ id: 'u', name: 'Bev Lee', email: 'b@x.com', username: 'bevlee' })).toBe('bevlee')
+describe('usernameError', () => {
+  it('accepts letters, numbers, _ and -', () => {
+    expect(usernameError('Bev_Lee-2')).toBeNull()
   })
 
-  it('makes the display name URL-safe', () => {
-    expect(baseUsername({ id: 'u', name: '  Bev  Lee!? ', email: 'b@x.com' })).toBe('Bev_Lee')
+  it('rejects names outside 3–20 characters', () => {
+    expect(usernameError('ab')).not.toBeNull()
+    expect(usernameError('a'.repeat(21))).not.toBeNull()
   })
 
-  it('falls back to the email local part, then a placeholder', () => {
-    expect(baseUsername({ id: 'u', name: '', email: 'castle@x.com' })).toBe('castle')
-    expect(baseUsername({ id: 'u', name: '!!', email: 'a@x.com' })).toBe('player')
-  })
-
-  it('caps length at 20', () => {
-    expect(baseUsername({ id: 'u', name: 'a'.repeat(30), email: '' })).toHaveLength(20)
+  it('rejects spaces and symbols that would break profile URLs', () => {
+    expect(usernameError('Bev Lee')).not.toBeNull()
+    expect(usernameError('bev/../admin')).not.toBeNull()
   })
 })

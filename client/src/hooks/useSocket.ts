@@ -5,11 +5,11 @@ const CONNECT_RETRY_MS = 3000
 
 /**
  * Manages the Socket.IO connection lifecycle.
- * The socket connects only once the player is signed in so the server
- * middleware can verify their identity from the auth cookie on handshake.
- * Disconnects automatically on logout.
+ * The socket connects only once the player has a name, so the server
+ * middleware can verify it on handshake: from the auth cookie for accounts,
+ * or from `guestName` for guests. Disconnects automatically on logout.
  */
-export function useSocket(signedIn: boolean) {
+export function useSocket(playing: boolean, guestName: string | null) {
   const [connected, setConnected] = useState(socket.connected)
   const hasConnected = useRef(false)
 
@@ -35,15 +35,16 @@ export function useSocket(signedIn: boolean) {
 
   // Connect on sign-in; disconnect on logout.
   useEffect(() => {
-    if (signedIn && !hasConnected.current) {
+    if (playing && !hasConnected.current) {
+      socket.auth = guestName ? { guestName } : {}
       socket.connect()
       hasConnected.current = true
     }
-    if (!signedIn && hasConnected.current) {
+    if (!playing && hasConnected.current) {
       socket.disconnect()
       hasConnected.current = false
     }
-  }, [signedIn])
+  }, [playing, guestName])
 
   return { connected }
 }

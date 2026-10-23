@@ -3,11 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { GAME_EVENTS } from '@towers/shared'
 import type { GameConfig, GameStartPayload } from '@towers/shared'
 import { socket } from './socket'
-import { useAuth } from './hooks/useAuth'
+import { useIdentity } from './hooks/useIdentity'
 import { useSocket } from './hooks/useSocket'
 import { useGameState } from './hooks/useGameState'
 import { useLobby } from './hooks/useLobby'
-import { AuthScreen } from './components/AuthScreen'
+import { AuthScreen, NameScreen } from './components/AuthScreen'
 import { HomePage } from './pages/HomePage'
 import { GamePage } from './pages/GamePage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -24,11 +24,13 @@ export default function App() {
 function AppRoutes() {
   const navigate = useNavigate()
 
-  const { user, loading: authLoading, error: authError, logout } = useAuth()
+  const { identity, error: authError, chooseName, playAsGuest, logout } = useIdentity()
 
-  const username = user?.username ?? ''
+  const player = identity.status === 'account' || identity.status === 'guest' ? identity : null
+  const isGuest = player?.status === 'guest'
+  const username = player?.username ?? ''
 
-  const { connected } = useSocket(user !== null)
+  const { connected } = useSocket(player !== null, isGuest ? username : null)
 
   const { gameState, gameOver, opponentDisconnected, pendingDrawDiscard, playCard, discardCard, sendDrawDiscardChoice, resetGame } = useGameState()
   const { rooms, currentRoom, error, listRooms, createRoom, joinRoom, leaveRoom, clearError: clearLobbyError } = useLobby()
@@ -68,17 +70,19 @@ function AppRoutes() {
     socket.disconnect()
   }, [currentRoom, leaveRoom, resetGame, logout, navigate])
 
-  // Public routes (profile + match) work logged-out — render before auth gate.
-  // We allow these to short-circuit even when user is null.
-
-  if (!user) {
+  // Public routes (profile + match) work without a player — render before the gate.
+  if (!player) {
     return (
       <Routes>
         <Route path="/profile/:username" element={<ProfilePage selfUsername={null} />} />
         <Route path="/match/:id" element={<MatchPage />} />
         <Route
           path="*"
-          element={<AuthScreen loading={authLoading} error={authError} />}
+          element={
+            identity.status === 'needsName'
+              ? <NameScreen onChooseName={chooseName} onSignOut={() => void logout()} />
+              : <AuthScreen loading={identity.status === 'loading'} error={authError} onPlayAsGuest={playAsGuest} />
+          }
         />
       </Routes>
     )
@@ -106,6 +110,7 @@ function AppRoutes() {
             currentRoom={currentRoom}
             error={error ?? authError}
             username={username}
+            isGuest={isGuest}
             onLogout={handleLogout}
           />
         }
@@ -132,8 +137,8 @@ function AppRoutes() {
           )
         }
       />
-      <Route path="/profile" element={<Navigate to={`/profile/${username}`} replace />} />
-      <Route path="/profile/:username" element={<ProfilePage selfUsername={username} />} />
+      <Route path="/profile" element={<Navigate to={isGuest ? '/' : `/profile/${username}`} replace />} />
+      <Route path="/profile/:username" element={<ProfilePage selfUsername={isGuest ? null : username} />} />
       <Route path="/match/:id" element={<MatchPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

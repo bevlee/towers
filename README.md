@@ -174,8 +174,13 @@ server reads it directly and confirms it through the service's `get-session` API
 goes through the server's same-origin `/api/auth/sign-out`.
 
 Stats and match history live in Postgres (`DATABASE_URL`). The server creates its tables
-on startup (`server/src/db.ts`), keyed by the Better Auth user ID. A player's username is
-taken from their account on first sign-in and made unique with a numeric suffix.
+on startup (`server/src/db.ts`), keyed by the Better Auth user ID. On first sign-in a player
+picks their name (3–20 letters, numbers, `_` or `-`, unique ignoring case); it's their
+public profile address and can't be changed.
+
+Guests can play without an account: they pick a name, which can't be a registered player's,
+and are told their games won't be saved. Guest games are never recorded, and the guest name
+is only remembered in that browser.
 
 Moving off PocketBase resets stats: PocketBase user IDs don't match Better Auth's, so old
 wins, losses and match history are not imported. `skaffold run` doesn't delete resources
